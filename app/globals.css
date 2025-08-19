@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Balgin font fallback to Inter */
+.font-balgin {
+  font-family: var(--font-inter);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-blanco text-negro font-balgin;
+  }
+}
+
+@layer components {
+  /* Botones principales con nueva paleta */
+  .btn-primary {
+    @apply relative overflow-hidden bg-gradient-primary text-blanco px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply relative overflow-hidden border-2 border-magenta text-magenta px-6 py-3 rounded-lg font-medium hover:bg-magenta hover:text-blanco transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95;
+  }
+
+  .btn-zafiro {
+    @apply relative overflow-hidden bg-zafiro text-blanco px-6 py-3 rounded-lg font-medium hover:bg-zafiro-light transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
+  }
+
+  .btn-oro {
+    @apply relative overflow-hidden bg-oro text-negro px-6 py-3 rounded-lg font-medium hover:bg-oro-light transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
+  }
+
+  /* Tarjetas de productos */
+  .card-product {
+    @apply bg-blanco border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-300 hover:border-magenta/20 hover:scale-[1.02];
+  }
+
+  .card-featured {
+    @apply bg-gradient-to-br from-magenta/5 to-zafiro/5 border border-magenta/10 rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:border-magenta/30 hover:scale-[1.02];
+  }
+
+  /* Navegación */
+  .nav-link {
+    @apply text-negro hover:text-magenta transition-colors duration-200 font-medium;
+  }
+
+  .nav-link-active {
+    @apply text-magenta font-semibold;
+  }
+
+  /* Badges y etiquetas */
+  .badge-magenta {
+    @apply bg-magenta text-blanco px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-zafiro {
+    @apply bg-zafiro text-blanco px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-oro {
+    @apply bg-oro text-negro px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  /* Inputs y formularios */
+  .input-primary {
+    @apply border border-gray-300 rounded-lg px-4 py-3 focus:border-magenta focus:ring-2 focus:ring-magenta/20 transition-all duration-200;
+  }
+
+  /* Gradientes personalizados */
+  .gradient-magenta-zafiro {
+    @apply bg-gradient-to-r from-magenta to-zafiro;
+  }
+
+  .gradient-amatista-zafiro {
+    @apply bg-gradient-to-r from-amatista to-zafiro;
+  }
+
+  .gradient-oro-magenta {
+    @apply bg-gradient-to-r from-oro to-magenta;
+  }
+
+  /* Efectos de hover */
+  .hover-magenta {
+    @apply hover:text-magenta transition-colors duration-200;
+  }
+
+  .hover-zafiro {
+    @apply hover:text-zafiro transition-colors duration-200;
+  }
+
+  /* Sombras personalizadas */
+  .shadow-magenta {
+    box-shadow: 0 4px 14px 0 rgba(245, 34, 164, 0.2);
+  }
+
+  .shadow-zafiro {
+    box-shadow: 0 4px 14px 0 rgba(77, 32, 238, 0.2);
+  }
+
+  .shadow-oro {
+    box-shadow: 0 4px 14px 0 rgba(231, 211, 26, 0.2);
+  }
+}
