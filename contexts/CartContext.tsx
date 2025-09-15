@@ -2,22 +2,23 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect } from "react"
+import { Product } from "@/types/api"
 
-export interface Product {
-  id: number
-  name: string
-  price: number
-  originalPrice?: number
-  image: string
-  category: string
-  brand: string
-  rating: number
-  reviews: number
-  description: string
-  specifications: Record<string, string>
-  inStock: boolean
-  badge?: string
-}
+// export interface Product {
+//   id: number
+//   name: string
+//   price: number
+//   originalPrice?: number
+//   image: string
+//   category: string
+//   brand: string
+//   rating: number
+//   reviews: number
+//   description: string
+//   specifications: Record<string, string>
+//   inStock: boolean
+//   badge?: string
+// }
 
 export interface CartItem extends Product {
   quantity: number

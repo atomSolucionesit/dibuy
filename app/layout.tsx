@@ -1,33 +1,53 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { CartProvider } from "@/contexts/CartContext"
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/providers/QueryProvider";
+import { AuthProvider } from "@/providers/AuthProvider";
+import { Toaster } from "@/components/ui/toaster";
+import { CartProvider } from "@/contexts/CartContext";
 
-const inter = Inter({
+const geist = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-})
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
-  title: "DIBUY - Tu tienda de tecnología",
-  description:
-    "Descubre los mejores productos tecnológicos al mejor precio. Smartphones, laptops, tablets y más con envío gratis.",
-  keywords: "tecnología, smartphones, laptops, tablets, accesorios, gaming, ofertas",
-    generator: 'v0.dev'
-}
+  title: "Dibuy - Tu tienda de tecnología",
+  description: "Encuentra los mejores productos tecnológicos al mejor precio",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
-      <body className={`${inter.variable} font-balgin`}>
-        <CartProvider>{children}</CartProvider>
+    <html lang="es" suppressHydrationWarning>
+      <body
+        className={`${geist.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <QueryProvider>
+            <AuthProvider>
+              <CartProvider>
+                {children}
+                <Toaster />
+              </CartProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

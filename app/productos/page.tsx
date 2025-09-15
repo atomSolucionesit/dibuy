@@ -1,15 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Star, Heart, ShoppingCart, Filter, Grid, List } from "lucide-react"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
-import { products } from "@/data/products"
+//import { products } from "@/data/products"
+import { productService } from "@/api/products/catalogo/productService"
+import { Product } from "@/types/api"
 
-const categories = [
+
+export default function ProductsPage() {
+  const { addItem } = useCart()
+  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [sortBy, setSortBy] = useState("featured")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [showFilters, setShowFilters] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [products, setProductos] = useState<Product[]>([]);
+  const [productosFiltrados, setProductosFiltrados] = useState<Product[]>([]);
+
+  const categories = [
   { id: "all", name: "Todos los productos", count: products.length },
   { id: "smartphones", name: "Smartphones", count: products.filter((p) => p.category === "smartphones").length },
   { id: "laptops", name: "Laptops", count: products.filter((p) => p.category === "laptops").length },
@@ -26,12 +39,26 @@ const sortOptions = [
   { id: "newest", name: "Más Nuevos" },
 ]
 
-export default function ProductsPage() {
-  const { addItem } = useCart()
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [sortBy, setSortBy] = useState("featured")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [showFilters, setShowFilters] = useState(false)
+  useEffect(() => {
+    fetchProducts();
+    console.log("API products: ", products);
+    
+  }, []);
+
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const productsResponse = await productService.getProducts(1, 10);
+      setProductos(productsResponse.info.data);
+      //setTotalPages(productsResponse.info.meta.pages);
+      //setTotalItems(productsResponse.info.meta.total);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      window.Error("Error al cargar los productos");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -45,7 +72,7 @@ export default function ProductsPage() {
     (product) => selectedCategory === "all" || product.category === selectedCategory,
   )
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  const sortedProducts = [...filteredProducts].sort((a: any, b: any) => {
     switch (sortBy) {
       case "price-low":
         return a.price - b.price
@@ -198,7 +225,7 @@ export default function ProductsPage() {
                     </button>
                     <Link href={`/producto/${product.id}`}>
                       <Image
-                        src={product.image || "/placeholder.svg"}
+                        src={"/placeholder.svg"}
                         alt={product.name}
                         width={400}
                         height={400}
