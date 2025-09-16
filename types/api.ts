@@ -35,6 +35,7 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   badge: string;
+  CategoryProduct: Category[];
 }
 
 export interface ProductFilters {
@@ -106,13 +107,10 @@ export interface ProductImage {
 
 // Tipos para categorías
 export interface Category {
+  categoryId: any;
   id: string;
   name: string;
-  slug: string;
   description?: string;
-  image?: string;
-  parentId?: string;
-  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }

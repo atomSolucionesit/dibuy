@@ -8,19 +8,24 @@ import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw } from
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
+import { useProductsStore } from "@/store/products"
 import { productService } from "@/api/products/catalogo/productService"
 import { Product, Brand } from "@/types/api"
 import { brandService } from "@/api/products/brands/brandService"
 
 export default function ProductPage() {
   const params = useParams()
+
   const { addItem } = useCart()
+  const { products, isLoading, fetchProducts } = useProductsStore()
+
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [product, setProducto] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [brand, setBrand] = useState<string | null>("hola");
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
 
   const fetchProduct = async () => {
     try {
@@ -52,17 +57,33 @@ export default function ProductPage() {
 
   const fetchBrandProduct = async (idBrand: number | undefined) => {
     const brand = brands.filter(b => b.id === idBrand);
-    setBrand(brand[0].name);
+    setBrand(brand[0]?.name);
   };
 
   useEffect(() => {
+    fetchProducts()
     fetchProduct();
     fetchBrands();
   }, []);
 
   useEffect(() => {
+  if (product && products.length > 0) {
+    const categoryId = product.CategoryProduct?.[0].categoryId
+
+    if (!categoryId) return
+
+    const filtered = products.filter(
+      (p) => p.CategoryProduct?.[0]?.categoryId === categoryId && p.id !== product.id
+    )
+    setRelatedProducts(filtered.slice(0, 4))
+  }
+}, [product, products])
+
+  useEffect(() => {
   console.log("Producto actualizado:", product);
-  console.log("Marcas: ", brands);
+  //console.log("Marcas: ", brands);
+  console.log("Relacionados: ", relatedProducts);
+  
   fetchBrandProduct(product?.brandId)
 }, [product, brands]);
 
@@ -107,7 +128,7 @@ export default function ProductPage() {
     }
   }
 
-  //const relatedProducts = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
+  
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -299,7 +320,7 @@ export default function ProductPage() {
         */}
 
         {/* Related Products */}
-        {/* relatedProducts.length > 0 && (
+        { relatedProducts.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">Productos relacionados</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -310,20 +331,20 @@ export default function ProductPage() {
                 >
                   <Link href={`/producto/${relatedProduct.id}`}>
                     <Image
-                      src={relatedProduct.image || "/placeholder.svg"}
+                      src={relatedProduct.images[0].url || "/placeholder.svg"}
                       alt={relatedProduct.name}
                       width={300}
                       height={300}
                       className="w-full h-48 object-cover rounded-lg mb-4"
                     />
                     <h3 className="font-semibold mb-2 hover:text-primary transition-colors">{relatedProduct.name}</h3>
-                    <p className="text-primary font-bold">{formatPrice(relatedProduct.price)}</p>
+                    <p className="text-primary font-bold">{formatPrice(relatedProduct.sellingPrice)}</p>
                   </Link>
                 </div>
               ))}
             </div>
           </div>
-        )*/}
+        )}
       </div>
 
       <Footer />

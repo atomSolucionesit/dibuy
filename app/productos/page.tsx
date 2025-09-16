@@ -7,19 +7,18 @@ import { Star, Heart, ShoppingCart, Filter, Grid, List } from "lucide-react"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
-//import { products } from "@/data/products"
-import { productService } from "@/api/products/catalogo/productService"
+import { useProductsStore } from "@/store/products"
 import { Product } from "@/types/api"
 
 
 export default function ProductsPage() {
   const { addItem } = useCart()
+  const { products, isLoading, fetchProducts } = useProductsStore()
+
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("featured")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showFilters, setShowFilters] = useState(false)
-  const [isLoading, setIsLoading] = useState(false);
-  const [products, setProductos] = useState<Product[]>([]);
   const [productosFiltrados, setProductosFiltrados] = useState<Product[]>([]);
 
   const categories = [
@@ -41,26 +40,11 @@ const sortOptions = [
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
   useEffect(() => {
   console.log("Productos actualizados:", products);
 }, [products]);
-
-  const fetchProducts = async () => {
-    setIsLoading(true);
-    try {
-      const productsResponse = await productService.getProducts(1, 10);
-      setProductos(productsResponse.info.data);
-      //setTotalPages(productsResponse.info.meta.pages);
-      //setTotalItems(productsResponse.info.meta.total);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      window.Error("Error al cargar los productos");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
