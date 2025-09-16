@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -8,16 +8,53 @@ import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw } from
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
-import { getProductById, products } from "@/data/products"
+import { productService } from "@/api/products/catalogo/productService"
+import { Product } from "@/types/api"
+//import { getProductById, products } from "@/data/products"
 
 export default function ProductPage() {
   const params = useParams()
   const { addItem } = useCart()
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [product, setProducto] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  
 
-  const productId = Number.parseInt(params.id as string)
-  const product = getProductById(productId)
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      const productsResponse = await productService.getProductById(params.id);
+      setProducto(productsResponse);
+      //setTotalPages(productsResponse.info.meta.pages);
+      //setTotalItems(productsResponse.info.meta.total);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      window.Error("Error al cargar los productos");
+    } finally{
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProduct();
+  }, []);
+
+  useEffect(() => {
+  console.log("Producto actualizado:", product);
+}, [product]);
+
+  if (loading) {
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <div className="container mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">Cargando producto...</h1>
+      </div>
+      <Footer />
+    </div>
+  );
+}
 
   if (!product) {
     return (
@@ -48,10 +85,7 @@ export default function ProductPage() {
     }
   }
 
-  const relatedProducts = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
-
-  // Mock images for gallery
-  const productImages = [product.image, product.image, product.image, product.image]
+  //const relatedProducts = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -95,7 +129,7 @@ export default function ProductPage() {
                 </span>
               )}
               <Image
-                src={productImages[selectedImage] || "/placeholder.svg"}
+                src={product.images[selectedImage].url}
                 alt={product.name}
                 width={600}
                 height={600}
@@ -104,7 +138,7 @@ export default function ProductPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-2">
-              {productImages.map((image, index) => (
+              {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -113,7 +147,7 @@ export default function ProductPage() {
                   }`}
                 >
                   <Image
-                    src={image || "/placeholder.svg"}
+                    src={image.url}
                     alt={`${product.name} ${index + 1}`}
                     width={150}
                     height={150}
@@ -148,7 +182,7 @@ export default function ProductPage() {
 
             <div className="space-y-2">
               <div className="flex items-center space-x-4">
-                <span className="text-3xl font-bold text-primary">{formatPrice(product.price)}</span>
+                <span className="text-3xl font-bold text-primary">{formatPrice(product.sellingPrice)}</span>
                 {product.originalPrice && (
                   <span className="text-lg text-gray line-through">{formatPrice(product.originalPrice)}</span>
                 )}
@@ -228,6 +262,7 @@ export default function ProductPage() {
         </div>
 
         {/* Specifications */}
+        {/*
         <div className="mt-12 bg-white rounded-xl p-6">
           <h2 className="text-2xl font-bold mb-6">Especificaciones</h2>
           <div className="grid md:grid-cols-2 gap-4">
@@ -239,9 +274,10 @@ export default function ProductPage() {
             ))}
           </div>
         </div>
+        */}
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
+        {/* relatedProducts.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">Productos relacionados</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -265,7 +301,7 @@ export default function ProductPage() {
               ))}
             </div>
           </div>
-        )}
+        )*/}
       </div>
 
       <Footer />

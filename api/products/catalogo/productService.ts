@@ -1,3 +1,4 @@
+import { ParamValue } from "next/dist/server/request/params";
 import {
   Product,
   ProductFormData,
@@ -30,7 +31,7 @@ export const getProducts = async (
   }
 };
 
-export const getProductById = async (id: string): Promise<Product> => {
+export const getProductById = async (id: ParamValue): Promise<any> => {
   try {
     const response = await api.get(`/products/${id}`);
     return response.data;

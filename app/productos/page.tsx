@@ -41,9 +41,11 @@ const sortOptions = [
 
   useEffect(() => {
     fetchProducts();
-    console.log("API products: ", products);
-    
   }, []);
+
+  useEffect(() => {
+  console.log("Productos actualizados:", products);
+}, [products]);
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -225,7 +227,7 @@ const sortOptions = [
                     </button>
                     <Link href={`/producto/${product.id}`}>
                       <Image
-                        src={"/placeholder.svg"}
+                        src={product.images[0].url}
                         alt={product.name}
                         width={400}
                         height={400}
@@ -259,7 +261,7 @@ const sortOptions = [
 
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xl font-bold text-magenta">{formatPrice(product.price)}</span>
+                        <span className="text-xl font-bold text-magenta">{formatPrice(product.sellingPrice)}</span>
                         {product.originalPrice && (
                           <span className="text-sm text-gray-500 line-through">{formatPrice(product.originalPrice)}</span>
                         )}

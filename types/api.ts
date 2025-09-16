@@ -22,8 +22,9 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  sellingPrice: number;
   originalPrice?: number;
-  images: string[];
+  images: ProductImage[];
   category: string;
   brand: string;
   stock: number;
@@ -94,6 +95,13 @@ export interface PaginatedProductsResponse {
     data: Product[];
     meta: PaginationMeta;
   };
+}
+
+export interface ProductImage {
+  id: string;
+  url: string;
+  productId: string;
+  createdAt: string;
 }
 
 // Tipos para categorías

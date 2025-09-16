@@ -12,7 +12,7 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   //const token = localStorage.getItem("access_token");
   //if (token) {
-    config.headers.Authorization = `Bearer eyJzdWIiOjIsInVzZXJJZCI6MiwiYnJhbmNoSWQiOjEsInVzZXJuYW1lIjoibmV4dXNzb2Z0d2FyZSIsImNvbXBhbnlJZCI6MiwiY29tcGFueVRva2VuIjoiZWQwYmY0ZDUtNzRlYi00ZTBiLWI1MTMtMzQ5MWU2YWIwMjA3IiwiaXNBZG1pbiI6dHJ1ZSwiY3VycmVuY3lJZCI6MCwicm9sZUlkIjozLCJyb2xlQ29kZSI6IlNVUEVSIiwiaWF0IjoxNzU3Njg3Mzc3LCJleHAiOjE3NTgyOTIxNzd9.4UBBQa8xc0RDWn_X6tmetxoSmJBndV6gbWweK1uJ5N8`;
+    config.headers.Authorization = `Bearer ed0bf4d5-74eb-4e0b-b513-3491e6ab0207`;
   //}
 
   if (config.data instanceof FormData) {
