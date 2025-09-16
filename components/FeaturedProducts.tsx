@@ -4,10 +4,40 @@ import Image from "next/image"
 import Link from "next/link"
 import { Star, Heart, ShoppingCart } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
-import { products } from "@/data/products"
+//import { products } from "@/data/products"
+import { productService } from "@/api/products/catalogo/productService"
+import { Product } from "@/types/api"
+import { useState, useEffect } from "react"
 
 export default function FeaturedProducts() {
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [products, setProductos] = useState<Product[]>([]);
   const { addItem } = useCart()
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+  console.log("Productos actualizados:", products);
+}, [products]);
+
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const productsResponse = await productService.getProducts(1, 10);
+      setProductos(productsResponse.info.data);
+      //setTotalPages(productsResponse.info.meta.pages);
+      //setTotalItems(productsResponse.info.meta.total);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      window.Error("Error al cargar los productos");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
       style: "currency",
@@ -49,7 +79,7 @@ export default function FeaturedProducts() {
                 </button>
                 <Link href={`/producto/${product.id}`}>
                   <Image
-                    src={product.image || "/placeholder.svg"}
+                    src={product.images[0].url || "/placeholder.svg"}
                     alt={product.name}
                     width={300}
                     height={300}
@@ -79,7 +109,7 @@ export default function FeaturedProducts() {
 
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="text-xl font-bold text-magenta">{formatPrice(product.price)}</span>
+                    <span className="text-xl font-bold text-magenta">{formatPrice(product.sellingPrice)}</span>
                     {product.originalPrice && (
                       <span className="text-sm text-gray-500 line-through">{formatPrice(product.originalPrice)}</span>
                     )}

@@ -26,7 +26,7 @@ export interface Product {
   originalPrice?: number;
   images: ProductImage[];
   category: string;
-  brand: string;
+  brandId: number;
   stock: number;
   rating: number;
   reviews: number;
@@ -115,6 +115,13 @@ export interface Category {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+// Tipos para brands
+export interface Brand {
+  id: number;
+  name: string;
+  description?: string;
 }
 
 // Tipos para usuarios

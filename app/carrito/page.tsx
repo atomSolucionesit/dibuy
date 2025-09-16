@@ -71,7 +71,7 @@ export default function CartPage() {
                 {state.items.map((item) => (
                   <div key={item.id} className="flex gap-4 p-4 border border-gray-200 rounded-lg">
                     <Image
-                      src={item.image || "/placeholder.svg"}
+                      src={item.images[0].url || "/placeholder.svg"}
                       alt={item.name}
                       width={100}
                       height={100}
@@ -82,7 +82,7 @@ export default function CartPage() {
                       <Link href={`/producto/${item.id}`}>
                         <h3 className="font-semibold hover:text-primary transition-colors">{item.name}</h3>
                       </Link>
-                      <p className="text-sm text-gray">Marca: {item.brand}</p>
+                      <p className="text-sm text-gray">Marca: {item.brandId}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <span className="text-lg font-bold text-primary">{formatPrice(item.price)}</span>

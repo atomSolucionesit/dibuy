@@ -9,8 +9,8 @@ import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
 import { productService } from "@/api/products/catalogo/productService"
-import { Product } from "@/types/api"
-//import { getProductById, products } from "@/data/products"
+import { Product, Brand } from "@/types/api"
+import { brandService } from "@/api/products/brands/brandService"
 
 export default function ProductPage() {
   const params = useParams()
@@ -19,7 +19,8 @@ export default function ProductPage() {
   const [selectedImage, setSelectedImage] = useState(0)
   const [product, setProducto] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brand, setBrand] = useState<string | null>("hola");
 
   const fetchProduct = async () => {
     try {
@@ -36,13 +37,34 @@ export default function ProductPage() {
     }
   };
 
+  const fetchBrands = async () => {
+    try {
+      setLoading(true);
+      const brandsResponse = await brandService.getBrands();
+      setBrands(brandsResponse);
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+      window.Error("Error al cargar las marcas");
+    } finally{
+      setLoading(false);
+    }
+  };
+
+  const fetchBrandProduct = async (idBrand: number | undefined) => {
+    const brand = brands.filter(b => b.id === idBrand);
+    setBrand(brand[0].name);
+  };
+
   useEffect(() => {
     fetchProduct();
+    fetchBrands();
   }, []);
 
   useEffect(() => {
   console.log("Producto actualizado:", product);
-}, [product]);
+  console.log("Marcas: ", brands);
+  fetchBrandProduct(product?.brandId)
+}, [product, brands]);
 
   if (loading) {
   return (
@@ -176,7 +198,7 @@ export default function ProductPage() {
                   </div>
                   <span className="text-sm text-gray">({product.reviews} reseñas)</span>
                 </div>
-                <span className="text-sm text-gray">Marca: {product.brand}</span>
+                <span className="text-sm text-gray">Marca: {brand}</span>
               </div>
             </div>
 

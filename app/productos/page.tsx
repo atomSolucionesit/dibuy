@@ -77,9 +77,9 @@ const sortOptions = [
   const sortedProducts = [...filteredProducts].sort((a: any, b: any) => {
     switch (sortBy) {
       case "price-low":
-        return a.price - b.price
+        return a.sellingPrice - b.sellingPrice
       case "price-high":
-        return b.price - a.price
+        return b.sellingPrice - a.sellingPrice
       case "rating":
         return b.rating - a.rating
       case "newest":
