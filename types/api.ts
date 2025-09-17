@@ -111,8 +111,17 @@ export interface Category {
   id: string;
   name: string;
   description?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PaginatedCategoriesResponse {
+  status: number;
+  message: string;
+  info: {
+    data: Category[];
+    meta: PaginationMeta;
+  };
 }
 
 // Tipos para brands

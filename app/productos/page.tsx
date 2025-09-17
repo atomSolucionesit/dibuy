@@ -8,27 +8,19 @@ import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
 import { useProductsStore } from "@/store/products"
+import { useCategoryStore } from "@/store/categories"
 import { Product } from "@/types/api"
 
 
 export default function ProductsPage() {
   const { addItem } = useCart()
   const { products, isLoading, fetchProducts } = useProductsStore()
+  const { categories, fetchCategories } = useCategoryStore()
 
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("featured")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showFilters, setShowFilters] = useState(false)
-  const [productosFiltrados, setProductosFiltrados] = useState<Product[]>([]);
-
-  const categories = [
-  { id: "all", name: "Todos los productos", count: products.length },
-  { id: "smartphones", name: "Smartphones", count: products.filter((p) => p.category === "smartphones").length },
-  { id: "laptops", name: "Laptops", count: products.filter((p) => p.category === "laptops").length },
-  { id: "tablets", name: "Tablets", count: products.filter((p) => p.category === "tablets").length },
-  { id: "accesorios", name: "Accesorios", count: products.filter((p) => p.category === "accesorios").length },
-  { id: "gaming", name: "Gaming", count: products.filter((p) => p.category === "gaming").length },
-]
 
 const sortOptions = [
   { id: "featured", name: "Destacados" },
@@ -40,10 +32,13 @@ const sortOptions = [
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, [fetchProducts]);
 
   useEffect(() => {
   console.log("Productos actualizados:", products);
+  console.log("Categorias: ", categories);
+  
 }, [products]);
 
   const formatPrice = (price: number) => {
@@ -54,9 +49,15 @@ const sortOptions = [
     }).format(price)
   }
 
-  const filteredProducts = products.filter(
-    (product) => selectedCategory === "all" || product.category === selectedCategory,
+  const filteredProducts = products.filter((product) => {
+  if (selectedCategory === "all") return true
+
+  // revisar si alguna de las categorías del producto coincide
+  return product.CategoryProduct?.some(
+    (cp) => cp.categoryId === selectedCategory
   )
+})
+
 
   const sortedProducts = [...filteredProducts].sort((a: any, b: any) => {
     switch (sortBy) {
@@ -99,25 +100,47 @@ const sortOptions = [
             <div className="bg-blanco rounded-xl p-6 shadow-sm border border-gray-200">
               <h3 className="font-semibold text-lg mb-4 text-negro">Categorías</h3>
               <ul className="space-y-2">
-                {categories.map((category) => (
-                  <li key={category.id}>
-                    <button
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                        selectedCategory === category.id 
-                          ? "bg-magenta text-blanco shadow-md" 
-                          : "hover:bg-magenta/10 hover:text-magenta"
-                      }`}
-                    >
-                      <span className="flex justify-between">
-                        <span>{category.name}</span>
-                        <span className={`text-sm ${selectedCategory === category.id ? 'opacity-75' : 'opacity-60'}`}>
-                          ({category.count})
-                        </span>
+                <li>
+                  <button
+                    onClick={() => setSelectedCategory("all")}
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                      selectedCategory === "all"
+                        ? "bg-magenta text-blanco shadow-md"
+                        : "hover:bg-magenta/10 hover:text-magenta"
+                    }`}
+                  >
+                    <span className="flex justify-between">
+                      <span>Todos</span>
+                      <span className={`text-sm ${selectedCategory === "all" ? "opacity-75" : "opacity-60"}`}>
+                        ({products.length})
                       </span>
-                    </button>
-                  </li>
-                ))}
+                    </span>
+                  </button>
+                </li>
+                {categories.map((category) => {
+                  const count = products.filter((product) =>
+                    product.CategoryProduct?.some((cp) => cp.categoryId === category.id)
+                  ).length
+                  return (
+                    <li key={category.id}>
+                      <button
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                          selectedCategory === category.id 
+                            ? "bg-magenta text-blanco shadow-md" 
+                            : "hover:bg-magenta/10 hover:text-magenta"
+                        }`}
+                      >
+                        <span className="flex justify-between">
+                          <span>{category.name}</span>
+                          <span className={`text-sm ${selectedCategory === category.id ? 'opacity-75' : 'opacity-60'}`}>
+                            ({count})
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           </aside>
