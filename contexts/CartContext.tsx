@@ -46,14 +46,14 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         const updatedItems = state.items.map((item) =>
           item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item,
         )
-        const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+        const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
         return { items: updatedItems, total, itemCount }
       } else {
         const newItem = { ...action.payload, quantity: 1 }
         const updatedItems = [...state.items, newItem]
-        const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+        const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
         return { items: updatedItems, total, itemCount }
@@ -62,7 +62,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
     case "REMOVE_ITEM": {
       const updatedItems = state.items.filter((item) => item.id !== action.payload)
-      const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
       return { items: updatedItems, total, itemCount }
@@ -75,7 +75,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         )
         .filter((item) => item.quantity > 0)
 
-      const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
       return { items: updatedItems, total, itemCount }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Search, ShoppingCart, Menu, X, User, Heart } from "lucide-react"
@@ -10,11 +11,15 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { state } = useCart()
+  const pathname = usePathname()
+
+  const isCartPage = pathname === "/carrito"
 
   return (
     <header className="bg-blanco shadow-sm sticky top-0 z-50 border-b border-gray-100">
       <div className="container mx-auto px-4">
         {/* Top bar - Hidden on mobile */}
+        { !isCartPage && (
         <div className="hidden md:flex justify-between items-center py-1 text-xs text-gray-600 border-b border-gray-100">
           <div className="flex space-x-4">
             <span className="text-negro">🚚 Envío gratis en compras superiores a $50.000</span>
@@ -28,6 +33,7 @@ export default function Header() {
             </Link>
           </div>
         </div>
+        )}
 
         {/* Main header */}
         <div className="flex items-center justify-between py-2">
@@ -37,6 +43,7 @@ export default function Header() {
           </Link>
 
           {/* Search bar - Desktop */}
+          { !isCartPage && (
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
             <div className="relative w-full">
               <input
@@ -49,6 +56,7 @@ export default function Header() {
               </button>
             </div>
           </div>
+          )}
 
           {/* Right section */}
           <div className="flex items-center space-x-4">
@@ -103,6 +111,7 @@ export default function Header() {
         )}
 
         {/* Navigation */}
+        { !isCartPage && (
         <nav className={`${isMenuOpen ? "block" : "hidden"} md:block border-t border-gray-100 md:border-t-0`}>
           <ul className="flex flex-col md:flex-row md:justify-center space-y-1 md:space-y-0 md:space-x-6 py-2">
             <li>
@@ -137,6 +146,7 @@ export default function Header() {
             </li>
           </ul>
         </nav>
+        )}
       </div>
     </header>
   )

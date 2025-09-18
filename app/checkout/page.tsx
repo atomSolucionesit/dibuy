@@ -286,7 +286,7 @@ export default function CheckoutPage() {
                 {state.items.map((item) => (
                   <div key={item.id} className="flex gap-4">
                     <Image
-                      src={item.image || "/placeholder.svg"}
+                      src={item.images[0].url || "/placeholder.svg"}
                       alt={item.name}
                       width={60}
                       height={60}
@@ -295,7 +295,7 @@ export default function CheckoutPage() {
                     <div className="flex-1">
                       <h3 className="font-medium text-sm">{item.name}</h3>
                       <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
-                      <p className="text-sm font-medium">{formatPrice(item.price)}</p>
+                      <p className="text-sm font-medium">{formatPrice(item.sellingPrice)}</p>
                     </div>
                   </div>
                 ))}

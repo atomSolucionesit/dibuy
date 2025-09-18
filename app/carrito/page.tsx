@@ -21,7 +21,7 @@ export default function CartPage() {
   if (state.items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
+        <Header/>
         <div className="container mx-auto px-4 py-20">
           <div className="text-center">
             <ShoppingBag className="h-24 w-24 mx-auto text-gray-300 mb-6" />
@@ -85,7 +85,7 @@ export default function CartPage() {
                       <p className="text-sm text-gray">Marca: {item.brandId}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg font-bold text-primary">{formatPrice(item.price)}</span>
+                          <span className="text-lg font-bold text-primary">{formatPrice(item.sellingPrice)}</span>
                           {item.originalPrice && (
                             <span className="text-sm text-gray line-through">{formatPrice(item.originalPrice)}</span>
                           )}
