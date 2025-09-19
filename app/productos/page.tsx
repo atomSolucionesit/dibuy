@@ -21,6 +21,7 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState("featured")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showFilters, setShowFilters] = useState(false)
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000])
 
 const sortOptions = [
   { id: "featured", name: "Destacados" },
@@ -50,13 +51,16 @@ const sortOptions = [
   }
 
   const filteredProducts = products.filter((product) => {
-  if (selectedCategory === "all") return true
+    const inCategory =
+      selectedCategory === "all" ||
+      product.CategoryProduct?.some((cp) => cp.categoryId === selectedCategory)
 
-  // revisar si alguna de las categorías del producto coincide
-  return product.CategoryProduct?.some(
-    (cp) => cp.categoryId === selectedCategory
-  )
-})
+    const inPriceRange =
+      product.sellingPrice >= priceRange[0] && product.sellingPrice <= priceRange[1]
+
+    return inCategory && inPriceRange
+  })
+
 
 
   const sortedProducts = [...filteredProducts].sort((a: any, b: any) => {
@@ -97,6 +101,7 @@ const sortOptions = [
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Filters */}
           <aside className={`lg:w-64 ${showFilters ? "block" : "hidden lg:block"}`}>
+            {/* Filtro por categorias */}
             <div className="bg-blanco rounded-xl p-6 shadow-sm border border-gray-200">
               <h3 className="font-semibold text-lg mb-4 text-negro">Categorías</h3>
               <ul className="space-y-2">
@@ -142,6 +147,54 @@ const sortOptions = [
                   )
                 })}
               </ul>
+            </div>
+            {/* Filtro por precio */}
+            <div className="bg-blanco rounded-xl p-6 shadow-sm border border-gray-200 mt-6">
+              <h3 className="font-semibold text-lg mb-4 text-negro">Filtrar por precio</h3>
+              <div className="flex justify-between text-sm mb-2">
+                <span>{formatPrice(priceRange[0])}</span>
+                <span>{formatPrice(priceRange[1])}</span>
+              </div>
+              {/* Slider doble */}
+              <div className="relative h-6">
+                <input
+                  type="range"
+                  min={0}
+                  max={1000000}
+                  step={500}
+                  value={priceRange[0]}
+                  onChange={(e) =>
+                    setPriceRange([Number(e.target.value), priceRange[1]])
+                  }
+                  className="absolute w-full pointer-events-none appearance-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-magenta [&::-webkit-slider-thumb]:cursor-pointer"
+                  style={{
+                    background: `linear-gradient(
+                      to right,
+                      #d1d5db ${((priceRange[0] / 1000000) * 100)}%,
+                      #e6007e ${((priceRange[0] / 1000000) * 100)}%,
+                      #e6007e ${((priceRange[1] / 1000000) * 100)}%,
+                      #d1d5db ${((priceRange[1] / 1000000) * 100)}%
+                    )`,
+                    height: "6px",
+                    borderRadius: "9999px",
+                  }}
+                />
+
+                <input
+                  type="range"
+                  min={0}
+                  max={1000000}
+                  step={500}
+                  value={priceRange[1]}
+                  onChange={(e) =>
+                    setPriceRange([priceRange[0], Number(e.target.value)])
+                  }
+                  className="absolute w-full pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-magenta [&::-webkit-slider-thumb]:cursor-pointer"
+                  style={{
+                    height: "6px"
+                  }}
+                />
+              </div>
             </div>
           </aside>
 
