@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -8,16 +8,96 @@ import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw } from
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
-import { getProductById, products } from "@/data/products"
+import { useProductsStore } from "@/store/products"
+import { productService } from "@/api/products/catalogo/productService"
+import { Product, Brand } from "@/types/api"
+import { brandService } from "@/api/products/brands/brandService"
 
 export default function ProductPage() {
   const params = useParams()
+
   const { addItem } = useCart()
+  const { products, isLoading, fetchProducts } = useProductsStore()
+
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [product, setProducto] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brand, setBrand] = useState<string | null>("hola");
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
 
-  const productId = Number.parseInt(params.id as string)
-  const product = getProductById(productId)
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      const productsResponse = await productService.getProductById(params.id);
+      setProducto(productsResponse);
+      //setTotalPages(productsResponse.info.meta.pages);
+      //setTotalItems(productsResponse.info.meta.total);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      window.Error("Error al cargar los productos");
+    } finally{
+      setLoading(false);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      setLoading(true);
+      const brandsResponse = await brandService.getBrands();
+      setBrands(brandsResponse);
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+      window.Error("Error al cargar las marcas");
+    } finally{
+      setLoading(false);
+    }
+  };
+
+  const fetchBrandProduct = async (idBrand: number | undefined) => {
+    const brand = brands.filter(b => b.id === idBrand);
+    setBrand(brand[0]?.name);
+  };
+
+  useEffect(() => {
+    fetchProducts()
+    fetchProduct();
+    fetchBrands();
+  }, []);
+
+  useEffect(() => {
+  if (product && products.length > 0) {
+    const categoryId = product.CategoryProduct?.[0].categoryId
+
+    if (!categoryId) return
+
+    const filtered = products.filter(
+      (p) => p.CategoryProduct?.[0]?.categoryId === categoryId && p.id !== product.id
+    )
+    setRelatedProducts(filtered.slice(0, 4))
+  }
+}, [product, products])
+
+  useEffect(() => {
+  console.log("Producto actualizado:", product);
+  //console.log("Marcas: ", brands);
+  console.log("Relacionados: ", relatedProducts);
+  
+  fetchBrandProduct(product?.brandId)
+}, [product, brands]);
+
+  if (loading) {
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <div className="container mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">Cargando producto...</h1>
+      </div>
+      <Footer />
+    </div>
+  );
+}
 
   if (!product) {
     return (
@@ -48,10 +128,7 @@ export default function ProductPage() {
     }
   }
 
-  const relatedProducts = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4)
-
-  // Mock images for gallery
-  const productImages = [product.image, product.image, product.image, product.image]
+  
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -95,7 +172,7 @@ export default function ProductPage() {
                 </span>
               )}
               <Image
-                src={productImages[selectedImage] || "/placeholder.svg"}
+                src={product.images[selectedImage].url}
                 alt={product.name}
                 width={600}
                 height={600}
@@ -104,7 +181,7 @@ export default function ProductPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-2">
-              {productImages.map((image, index) => (
+              {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -113,7 +190,7 @@ export default function ProductPage() {
                   }`}
                 >
                   <Image
-                    src={image || "/placeholder.svg"}
+                    src={image.url}
                     alt={`${product.name} ${index + 1}`}
                     width={150}
                     height={150}
@@ -142,13 +219,13 @@ export default function ProductPage() {
                   </div>
                   <span className="text-sm text-gray">({product.reviews} reseñas)</span>
                 </div>
-                <span className="text-sm text-gray">Marca: {product.brand}</span>
+                <span className="text-sm text-gray">Marca: {brand}</span>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center space-x-4">
-                <span className="text-3xl font-bold text-primary">{formatPrice(product.price)}</span>
+                <span className="text-3xl font-bold text-primary">{formatPrice(product.sellingPrice)}</span>
                 {product.originalPrice && (
                   <span className="text-lg text-gray line-through">{formatPrice(product.originalPrice)}</span>
                 )}
@@ -228,6 +305,7 @@ export default function ProductPage() {
         </div>
 
         {/* Specifications */}
+        {/*
         <div className="mt-12 bg-white rounded-xl p-6">
           <h2 className="text-2xl font-bold mb-6">Especificaciones</h2>
           <div className="grid md:grid-cols-2 gap-4">
@@ -239,9 +317,10 @@ export default function ProductPage() {
             ))}
           </div>
         </div>
+        */}
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
+        { relatedProducts.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">Productos relacionados</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -252,14 +331,14 @@ export default function ProductPage() {
                 >
                   <Link href={`/producto/${relatedProduct.id}`}>
                     <Image
-                      src={relatedProduct.image || "/placeholder.svg"}
+                      src={relatedProduct.images[0].url || "/placeholder.svg"}
                       alt={relatedProduct.name}
                       width={300}
                       height={300}
                       className="w-full h-48 object-cover rounded-lg mb-4"
                     />
                     <h3 className="font-semibold mb-2 hover:text-primary transition-colors">{relatedProduct.name}</h3>
-                    <p className="text-primary font-bold">{formatPrice(relatedProduct.price)}</p>
+                    <p className="text-primary font-bold">{formatPrice(relatedProduct.sellingPrice)}</p>
                   </Link>
                 </div>
               ))}

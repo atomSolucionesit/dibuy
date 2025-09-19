@@ -1,22 +1,27 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Star, Heart, ShoppingCart, Filter, Grid, List } from "lucide-react"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
-import { products } from "@/data/products"
+import { useProductsStore } from "@/store/products"
+import { useCategoryStore } from "@/store/categories"
+import { Product } from "@/types/api"
 
-const categories = [
-  { id: "all", name: "Todos los productos", count: products.length },
-  { id: "smartphones", name: "Smartphones", count: products.filter((p) => p.category === "smartphones").length },
-  { id: "laptops", name: "Laptops", count: products.filter((p) => p.category === "laptops").length },
-  { id: "tablets", name: "Tablets", count: products.filter((p) => p.category === "tablets").length },
-  { id: "accesorios", name: "Accesorios", count: products.filter((p) => p.category === "accesorios").length },
-  { id: "gaming", name: "Gaming", count: products.filter((p) => p.category === "gaming").length },
-]
+
+export default function ProductsPage() {
+  const { addItem } = useCart()
+  const { products, isLoading, fetchProducts } = useProductsStore()
+  const { categories, fetchCategories } = useCategoryStore()
+
+  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [sortBy, setSortBy] = useState("featured")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [showFilters, setShowFilters] = useState(false)
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000])
 
 const sortOptions = [
   { id: "featured", name: "Destacados" },
@@ -26,12 +31,16 @@ const sortOptions = [
   { id: "newest", name: "Más Nuevos" },
 ]
 
-export default function ProductsPage() {
-  const { addItem } = useCart()
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [sortBy, setSortBy] = useState("featured")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [showFilters, setShowFilters] = useState(false)
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+  console.log("Productos actualizados:", products);
+  console.log("Categorias: ", categories);
+  
+}, [products]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -41,16 +50,25 @@ export default function ProductsPage() {
     }).format(price)
   }
 
-  const filteredProducts = products.filter(
-    (product) => selectedCategory === "all" || product.category === selectedCategory,
-  )
+  const filteredProducts = products.filter((product) => {
+    const inCategory =
+      selectedCategory === "all" ||
+      product.CategoryProduct?.some((cp) => cp.categoryId === selectedCategory)
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    const inPriceRange =
+      product.sellingPrice >= priceRange[0] && product.sellingPrice <= priceRange[1]
+
+    return inCategory && inPriceRange
+  })
+
+
+
+  const sortedProducts = [...filteredProducts].sort((a: any, b: any) => {
     switch (sortBy) {
       case "price-low":
-        return a.price - b.price
+        return a.sellingPrice - b.sellingPrice
       case "price-high":
-        return b.price - a.price
+        return b.sellingPrice - a.sellingPrice
       case "rating":
         return b.rating - a.rating
       case "newest":
@@ -83,29 +101,100 @@ export default function ProductsPage() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Filters */}
           <aside className={`lg:w-64 ${showFilters ? "block" : "hidden lg:block"}`}>
+            {/* Filtro por categorias */}
             <div className="bg-blanco rounded-xl p-6 shadow-sm border border-gray-200">
               <h3 className="font-semibold text-lg mb-4 text-negro">Categorías</h3>
               <ul className="space-y-2">
-                {categories.map((category) => (
-                  <li key={category.id}>
-                    <button
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                        selectedCategory === category.id 
-                          ? "bg-magenta text-blanco shadow-md" 
-                          : "hover:bg-magenta/10 hover:text-magenta"
-                      }`}
-                    >
-                      <span className="flex justify-between">
-                        <span>{category.name}</span>
-                        <span className={`text-sm ${selectedCategory === category.id ? 'opacity-75' : 'opacity-60'}`}>
-                          ({category.count})
-                        </span>
+                <li>
+                  <button
+                    onClick={() => setSelectedCategory("all")}
+                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                      selectedCategory === "all"
+                        ? "bg-magenta text-blanco shadow-md"
+                        : "hover:bg-magenta/10 hover:text-magenta"
+                    }`}
+                  >
+                    <span className="flex justify-between">
+                      <span>Todos</span>
+                      <span className={`text-sm ${selectedCategory === "all" ? "opacity-75" : "opacity-60"}`}>
+                        ({products.length})
                       </span>
-                    </button>
-                  </li>
-                ))}
+                    </span>
+                  </button>
+                </li>
+                {categories.map((category) => {
+                  const count = products.filter((product) =>
+                    product.CategoryProduct?.some((cp) => cp.categoryId === category.id)
+                  ).length
+                  return (
+                    <li key={category.id}>
+                      <button
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                          selectedCategory === category.id 
+                            ? "bg-magenta text-blanco shadow-md" 
+                            : "hover:bg-magenta/10 hover:text-magenta"
+                        }`}
+                      >
+                        <span className="flex justify-between">
+                          <span>{category.name}</span>
+                          <span className={`text-sm ${selectedCategory === category.id ? 'opacity-75' : 'opacity-60'}`}>
+                            ({count})
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
+            </div>
+            {/* Filtro por precio */}
+            <div className="bg-blanco rounded-xl p-6 shadow-sm border border-gray-200 mt-6">
+              <h3 className="font-semibold text-lg mb-4 text-negro">Filtrar por precio</h3>
+              <div className="flex justify-between text-sm mb-2">
+                <span>{formatPrice(priceRange[0])}</span>
+                <span>{formatPrice(priceRange[1])}</span>
+              </div>
+              {/* Slider doble */}
+              <div className="relative h-6">
+                <input
+                  type="range"
+                  min={0}
+                  max={1000000}
+                  step={500}
+                  value={priceRange[0]}
+                  onChange={(e) =>
+                    setPriceRange([Number(e.target.value), priceRange[1]])
+                  }
+                  className="absolute w-full pointer-events-none appearance-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-magenta [&::-webkit-slider-thumb]:cursor-pointer"
+                  style={{
+                    background: `linear-gradient(
+                      to right,
+                      #d1d5db ${((priceRange[0] / 1000000) * 100)}%,
+                      #e6007e ${((priceRange[0] / 1000000) * 100)}%,
+                      #e6007e ${((priceRange[1] / 1000000) * 100)}%,
+                      #d1d5db ${((priceRange[1] / 1000000) * 100)}%
+                    )`,
+                    height: "6px",
+                    borderRadius: "9999px",
+                  }}
+                />
+
+                <input
+                  type="range"
+                  min={0}
+                  max={1000000}
+                  step={500}
+                  value={priceRange[1]}
+                  onChange={(e) =>
+                    setPriceRange([priceRange[0], Number(e.target.value)])
+                  }
+                  className="absolute w-full pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-magenta [&::-webkit-slider-thumb]:cursor-pointer"
+                  style={{
+                    height: "6px"
+                  }}
+                />
+              </div>
             </div>
           </aside>
 
@@ -198,7 +287,7 @@ export default function ProductsPage() {
                     </button>
                     <Link href={`/producto/${product.id}`}>
                       <Image
-                        src={product.image || "/placeholder.svg"}
+                        src={product.images[0].url}
                         alt={product.name}
                         width={400}
                         height={400}
@@ -232,7 +321,7 @@ export default function ProductsPage() {
 
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xl font-bold text-magenta">{formatPrice(product.price)}</span>
+                        <span className="text-xl font-bold text-magenta">{formatPrice(product.sellingPrice)}</span>
                         {product.originalPrice && (
                           <span className="text-sm text-gray-500 line-through">{formatPrice(product.originalPrice)}</span>
                         )}

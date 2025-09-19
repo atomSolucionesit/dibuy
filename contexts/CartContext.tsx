@@ -2,22 +2,23 @@
 
 import type React from "react"
 import { createContext, useContext, useReducer, useEffect } from "react"
+import { Product } from "@/types/api"
 
-export interface Product {
-  id: number
-  name: string
-  price: number
-  originalPrice?: number
-  image: string
-  category: string
-  brand: string
-  rating: number
-  reviews: number
-  description: string
-  specifications: Record<string, string>
-  inStock: boolean
-  badge?: string
-}
+// export interface Product {
+//   id: number
+//   name: string
+//   price: number
+//   originalPrice?: number
+//   image: string
+//   category: string
+//   brand: string
+//   rating: number
+//   reviews: number
+//   description: string
+//   specifications: Record<string, string>
+//   inStock: boolean
+//   badge?: string
+// }
 
 export interface CartItem extends Product {
   quantity: number
@@ -31,8 +32,8 @@ interface CartState {
 
 type CartAction =
   | { type: "ADD_ITEM"; payload: Product }
-  | { type: "REMOVE_ITEM"; payload: number }
-  | { type: "UPDATE_QUANTITY"; payload: { id: number; quantity: number } }
+  | { type: "REMOVE_ITEM"; payload: number | string }
+  | { type: "UPDATE_QUANTITY"; payload: { id: number | string; quantity: number } }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_CART"; payload: CartState }
 
@@ -45,14 +46,14 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         const updatedItems = state.items.map((item) =>
           item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item,
         )
-        const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+        const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
         return { items: updatedItems, total, itemCount }
       } else {
         const newItem = { ...action.payload, quantity: 1 }
         const updatedItems = [...state.items, newItem]
-        const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+        const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
         return { items: updatedItems, total, itemCount }
@@ -61,7 +62,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
     case "REMOVE_ITEM": {
       const updatedItems = state.items.filter((item) => item.id !== action.payload)
-      const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
       return { items: updatedItems, total, itemCount }
@@ -74,7 +75,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         )
         .filter((item) => item.quantity > 0)
 
-      const total = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
       return { items: updatedItems, total, itemCount }
@@ -94,8 +95,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 interface CartContextType {
   state: CartState
   addItem: (product: Product) => void
-  removeItem: (id: number) => void
-  updateQuantity: (id: number, quantity: number) => void
+  removeItem: (id: string) => void
+  updateQuantity: (id: string, quantity: number) => void
   clearCart: () => void
 }
 
@@ -130,11 +131,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: "ADD_ITEM", payload: product })
   }
 
-  const removeItem = (id: number) => {
+  const removeItem = (id: string) => {
     dispatch({ type: "REMOVE_ITEM", payload: id })
   }
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } })
   }
 
