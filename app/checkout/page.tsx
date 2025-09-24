@@ -7,6 +7,8 @@ import { Minus, Plus, Trash2, CreditCard, Truck, Shield, RotateCcw, CheckCircle 
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
+import { createSale } from "@/api/sales/saleService"
+import { createToken, createPayment, getPaymentStatus } from "@/services/payments"
 
 const paymentMethods = [
   { id: "credit", name: "Tarjeta de crédito", icon: CreditCard },
@@ -49,10 +51,10 @@ export default function CheckoutPage() {
   const shipping = selectedShipping?.price || 0
   const total = subtotal + shipping
 
-  if (state.items.length === 0) {
-    router.push("/carrito")
-    return null
-  }
+  // if (state.items.length === 0) {
+  //   router.push("/carrito")
+  //   return null
+  // }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,6 +67,68 @@ export default function CheckoutPage() {
       router.push("/")
     }
   }
+
+  const handlePayment = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  try {
+    // 1. Crear la venta
+    const sale = await createSale({
+        total,
+        subTotal: subtotal,
+        taxAmount: 0,
+        status: "PENDING",
+        receiptTypeId: 1, // 👈 ajustá según tu BD
+        documentTypeId: 1, // 👈 idem
+        currencyId: 1,     // 👈 idem
+        paymentCharge: {
+          amountPaid: 0, // empieza en 0 hasta que se procese
+          turned: 0,
+          isCredit: false,
+          date: new Date().toISOString(),
+          dueDate: new Date().toISOString(),
+          outstandingBalance: 0,
+          details: [], // si tenés tipos de pago, llenás esto
+        },
+        details: state.items.map((item) => ({
+          productId: item.id,
+          quantity: item.quantity,
+          price: item.sellingPrice,
+          discount: 0,
+        })),
+      });
+
+    console.log("Venta creada:", sale);
+
+    // 2. Generar token (hardcodeado para pruebas)
+    const tokenData = await createToken({
+      card_number: "4111111111111111",
+      card_expiration_month: "12",
+      card_expiration_year: "2030",
+      security_code: "123",
+    });
+
+    const token = tokenData.info.id;
+
+    // 3. Crear pago
+    const payment = await createPayment(token, total, sale.info.id);
+    console.log("Pago creado:", payment);
+
+    // 4. Consultar estado del pago
+    const paymentInfo = await getPaymentStatus(payment.id);
+    console.log("Estado del pago:", paymentInfo);
+
+    if (paymentInfo.status === "PAID") {
+      clearCart();
+      //router.push("/confirmacion"); // 👈 crea una página de confirmación
+    } else {
+      alert("El pago no se pudo procesar");
+    }
+  } catch (error) {
+    console.log(error);
+    alert("Hubo un error al procesar el pago");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,7 +175,7 @@ export default function CheckoutPage() {
             {step === 1 && (
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <h2 className="text-2xl font-bold mb-6">Información personal</h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handlePayment} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium mb-2">Nombre</label>
