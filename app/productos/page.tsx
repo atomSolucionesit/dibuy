@@ -9,8 +9,6 @@ import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
 import { useProductsStore } from "@/store/products"
 import { useCategoryStore } from "@/store/categories"
-import { Product } from "@/types/api"
-
 
 export default function ProductsPage() {
   const { addItem } = useCart()
@@ -256,7 +254,7 @@ const sortOptions = [
             {/* Products Grid */}
             <div
               className={`grid gap-6 ${
-                viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
+                viewMode === "grid" ? "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-2"
               }`}
             >
               {sortedProducts.map((product) => (

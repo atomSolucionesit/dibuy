@@ -12,6 +12,7 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   //const token = localStorage.getItem("access_token");
   //if (token) {
+
     config.headers.Authorization = `Bearer 6679e944-d883-4a9a-971f-997a28cdcf29`;
   //}
 
