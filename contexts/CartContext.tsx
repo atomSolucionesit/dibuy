@@ -22,6 +22,7 @@ import { Product } from "@/types/api"
 
 export interface CartItem extends Product {
   quantity: number
+  weight?: number
 }
 
 interface CartState {

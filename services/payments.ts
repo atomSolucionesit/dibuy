@@ -12,7 +12,7 @@ export const createToken = async (cardData: any) => {
 };
 
 // Crear pago
-export const createPayment = async (token: string, amount: number, saleId: string) => {
+export const createPayment = async (token: string, amount: number, saleId: string | null) => {
   try {
     const res = await api.post("/payway-mock/payments", {
       token,

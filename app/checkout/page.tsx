@@ -26,6 +26,7 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { state, updateQuantity, removeItem, clearCart } = useCart()
   const [step, setStep] = useState(1)
+  const [saleId, setSaleId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -37,6 +38,12 @@ export default function CheckoutPage() {
     paymentMethod: "credit",
     shippingMethod: "standard",
   })
+
+  // Datos de tarjeta
+  const [cardNumber, setCardNumber] = useState("");
+  const [expMonth, setExpMonth] = useState("");
+  const [expYear, setExpYear] = useState("");
+  const [cvv, setCvv] = useState("");
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -51,84 +58,74 @@ export default function CheckoutPage() {
   const shipping = selectedShipping?.price || 0
   const total = subtotal + shipping
 
-  // if (state.items.length === 0) {
-  //   router.push("/carrito")
-  //   return null
-  // }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (step === 1) {
-      setStep(2)
-    } else {
-      // Simular procesamiento del pago
-      alert("¡Pedido realizado con éxito!")
-      clearCart()
-      router.push("/")
-    }
-  }
-
-  const handlePayment = async (e: React.FormEvent) => {
-  e.preventDefault();
-
+// Paso 1: crear venta
+const handleCreateSale = async (e: React.FormEvent) => {
+  e.preventDefault()
   try {
-    // 1. Crear la venta
     const sale = await createSale({
-        total,
-        subTotal: subtotal,
-        taxAmount: 0,
-        status: "PENDING",
-        receiptTypeId: 1, // 👈 ajustá según tu BD
-        documentTypeId: 1, // 👈 idem
-        currencyId: 1,     // 👈 idem
-        paymentCharge: {
-          amountPaid: 0, // empieza en 0 hasta que se procese
-          turned: 0,
-          isCredit: false,
-          date: new Date().toISOString(),
-          dueDate: new Date().toISOString(),
-          outstandingBalance: 0,
-          details: [], // si tenés tipos de pago, llenás esto
-        },
-        details: state.items.map((item) => ({
-          productId: item.id,
-          quantity: item.quantity,
-          price: item.sellingPrice,
-          discount: 0,
-        })),
-      });
-
-    console.log("Venta creada:", sale);
-
-    // 2. Generar token (hardcodeado para pruebas)
-    const tokenData = await createToken({
-      card_number: "4111111111111111",
-      card_expiration_month: "12",
-      card_expiration_year: "2030",
-      security_code: "123",
+      total,
+      subTotal: subtotal,
+      taxAmount: 0,
+      status: "PENDING",
+      receiptTypeId: 1,
+      documentTypeId: 1,
+      currencyId: 1,
+      paymentCharge: {
+        amountPaid: 0,
+        turned: 0,
+        isCredit: false,
+        date: new Date().toISOString(),
+        dueDate: new Date().toISOString(),
+        outstandingBalance: 0,
+        details: [],
+      },
+      details: state.items.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.sellingPrice,
+        discount: 0,
+      })),
     });
 
-    const token = tokenData.info.id;
-
-    // 3. Crear pago
-    const payment = await createPayment(token, total, sale.info.id);
-    console.log("Pago creado:", payment);
-
-    // 4. Consultar estado del pago
-    const paymentInfo = await getPaymentStatus(payment.id);
-    console.log("Estado del pago:", paymentInfo);
-
-    if (paymentInfo.status === "PAID") {
-      clearCart();
-      //router.push("/confirmacion"); // 👈 crea una página de confirmación
-    } else {
-      alert("El pago no se pudo procesar");
-    }
-  } catch (error) {
-    console.log(error);
-    alert("Hubo un error al procesar el pago");
+    setSaleId(sale.info.id);
+    setStep(2);
+  } catch (err) {
+    console.error(err);
+    alert("Error al crear la venta");
   }
 };
+
+// Paso 2: procesar pago
+const handleProcessPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      // 1. Tokenizar tarjeta
+      const tokenData = await createToken({
+        card_number: cardNumber,
+        card_expiration_month: expMonth,
+        card_expiration_year: expYear,
+        security_code: cvv,
+      });
+
+      const token = tokenData.info.id;
+
+      // 2. Crear pago
+      const payment = await createPayment(token, total, saleId);
+
+      // 3. Consultar estado
+      const paymentInfo = await getPaymentStatus(payment.id);
+
+      if (paymentInfo.status === "PAID") {
+        clearCart();
+        router.push("/confirmacion");
+      } else {
+        alert("El pago no se pudo procesar");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al procesar el pago");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -175,7 +172,7 @@ export default function CheckoutPage() {
             {step === 1 && (
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <h2 className="text-2xl font-bold mb-6">Información personal</h2>
-                <form onSubmit={handlePayment} className="space-y-6">
+                <form onSubmit={handleCreateSale} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium mb-2">Nombre</label>
@@ -184,7 +181,7 @@ export default function CheckoutPage() {
                         required
                         value={formData.firstName}
                         onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div>
@@ -194,7 +191,7 @@ export default function CheckoutPage() {
                         required
                         value={formData.lastName}
                         onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -207,7 +204,7 @@ export default function CheckoutPage() {
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div>
@@ -217,7 +214,7 @@ export default function CheckoutPage() {
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -229,7 +226,7 @@ export default function CheckoutPage() {
                       required
                       value={formData.address}
                       onChange={(e) => setFormData({...formData, address: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                      className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                     />
                   </div>
 
@@ -241,7 +238,7 @@ export default function CheckoutPage() {
                         required
                         value={formData.city}
                         onChange={(e) => setFormData({...formData, city: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div>
@@ -251,7 +248,7 @@ export default function CheckoutPage() {
                         required
                         value={formData.postalCode}
                         onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -269,74 +266,65 @@ export default function CheckoutPage() {
 
             {/* Step 2: Payment */}
             {step === 2 && (
-              <div className="bg-white rounded-xl p-6 shadow-sm">
-                <h2 className="text-2xl font-bold mb-6">Método de pago</h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-4">Selecciona tu método de pago</label>
-                    <div className="space-y-3">
-                      {paymentMethods.map((method) => (
-                        <label key={method.id} className="flex items-center space-x-3 p-4 border border-gray-300 rounded-lg hover:border-primary cursor-pointer">
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value={method.id}
-                            checked={formData.paymentMethod === method.id}
-                            onChange={(e) => setFormData({...formData, paymentMethod: e.target.value})}
-                            className="text-primary"
-                          />
-                          <method.icon className="h-5 w-5 text-gray-400" />
-                          <span>{method.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+              <form onSubmit={handleProcessPayment} className="space-y-6">
+                <h2 className="text-lg font-semibold">Datos de tarjeta</h2>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-4">Método de envío</label>
-                    <div className="space-y-3">
-                      {shippingMethods.map((method) => (
-                        <label key={method.id} className="flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:border-primary cursor-pointer">
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="radio"
-                              name="shippingMethod"
-                              value={method.id}
-                              checked={formData.shippingMethod === method.id}
-                              onChange={(e) => setFormData({...formData, shippingMethod: e.target.value})}
-                              className="text-primary"
-                            />
-                            <div>
-                              <div className="font-medium">{method.name}</div>
-                              <div className="text-sm text-gray-500">{method.time}</div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-medium">{method.price === 0 ? "Gratis" : formatPrice(method.price)}</div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium">Número de tarjeta</label>
+                  <input
+                    type="text"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                    className="w-full border px-3 py-2 rounded-lg border-negro bg-blanco-light focus:outline-none focus:border-primary"
+                    placeholder="4507990000004905"
+                    required
+                  />
+                </div>
 
-                  <div className="flex space-x-4">
-                    <button
-                      type="button"
-                      onClick={() => setStep(1)}
-                      className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-lg hover:border-primary hover:text-primary transition-colors"
-                    >
-                      Volver
-                    </button>
-                    <button
-                      type="submit"
-                      className="group relative overflow-hidden flex-1 bg-gradient-primary text-white px-6 py-4 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                    >
-                      <span className="relative z-10">Confirmar pedido</span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                    </button>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium">Mes</label>
+                    <input
+                      type="text"
+                      value={expMonth}
+                      onChange={(e) => setExpMonth(e.target.value)}
+                      className="w-full border px-3 py-2 rounded-lg border-negro bg-blanco-light focus:outline-none focus:border-primary"
+                      placeholder="12"
+                      required
+                    />
                   </div>
-                </form>
-              </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium">Año</label>
+                    <input
+                      type="text"
+                      value={expYear}
+                      onChange={(e) => setExpYear(e.target.value)}
+                      className="w-full border px-3 py-2 rounded-lg border-negro bg-blanco-light focus:outline-none focus:border-primary"
+                      placeholder="25"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium">CVV</label>
+                  <input
+                    type="text"
+                    value={cvv}
+                    onChange={(e) => setCvv(e.target.value)}
+                    className="w-full border px-3 py-2 rounded-lg border-negro bg-blanco-light focus:outline-none focus:border-primary"
+                    placeholder="123"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                >
+                  Confirmar pago
+                </button>
+              </form>
             )}
           </div>
 
