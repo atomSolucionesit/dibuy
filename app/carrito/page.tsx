@@ -1,14 +1,22 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
+import { getShippingCost } from "@/services/shipping"
+import { provincias } from "@/data/provincias"
 
 export default function CartPage() {
   const { state, updateQuantity, removeItem, clearCart } = useCart()
+  const [shipping, setShipping] = useState<number | null>(null)
+  const [loadingShipping, setLoadingShipping] = useState(false)
+  const [provincia, setProvincia] = useState("AR-C")
+  const [codigoPostal, setCodigoPostal] = useState("")
+  const [empresa, setEmpresa] = useState("correoArgentino")
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -17,6 +25,22 @@ export default function CartPage() {
       minimumFractionDigits: 0,
     }).format(price)
   }
+
+  const calcularEnvio = () => {
+    if (!codigoPostal) return
+    setLoadingShipping(true)
+
+    getShippingCost("1001", codigoPostal, "5", empresa)
+      .then((data) => {
+        console.log("data:", data)
+        setShipping(data[0]?.quotes[0].office || 0)
+      })
+      .finally(() => setLoadingShipping(false))
+  }
+
+  useEffect(() => {
+    if (state.items.length === 0) setShipping(null)
+  }, [state.items])
 
   if (state.items.length === 0) {
     return (
@@ -127,20 +151,74 @@ export default function CartPage() {
           <div className="space-y-6">
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h2 className="text-xl font-bold mb-4">Resumen del pedido</h2>
-
+              <hr></hr>
               <div className="space-y-3">
+                <div className="flex justify-between">
+                  {/* Zona de envío */}
+                  <div className="bg-white rounded-xl py-6 shadow-sm">
+                    <h2 className="text-lg font-bold mb-4">Calcular envío</h2>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm mb-1">Provincia</label>
+                        <select
+                          value={provincia}
+                          onChange={(e) => setProvincia(e.target.value)}
+                          className="w-full px-3 py-2 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
+                        >
+                          {provincias.map((p) => (
+                            <option key={p.code} value={p.code}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm mb-1">Código postal</label>
+                        <input
+                          type="text"
+                          value={codigoPostal}
+                          onChange={(e) => setCodigoPostal(e.target.value)}
+                          className="w-full px-3 py-2 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
+                          placeholder="Ej: 4600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm mb-1">Empresa</label>
+                        <select
+                          value={empresa}
+                          onChange={(e) => setEmpresa(e.target.value)}
+                          className="w-full px-3 py-2 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
+                        >
+                          <option value="oca">OCA</option>
+                          <option value="correoArgentino">Correo Argentino</option>
+                          <option value="andreani">Andreani</option>
+                        </select>
+                      </div>
+
+                      <button
+                        onClick={calcularEnvio}
+                        className="w-full bg-gradient-primary text-white px-4 py-2 rounded-lg mt-2 hover:opacity-90 transition"
+                      >
+                        Calcular envío
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
                   <span>{formatPrice(state.total)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Envío:</span>
-                  <span className="text-green-600">Gratis</span>
+                  <span>{formatPrice(shipping || 0)}</span>
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total:</span>
-                    <span className="text-primary">{formatPrice(state.total)}</span>
+                    <span className="text-primary">{formatPrice(state.total + (shipping || 0))}</span>
                   </div>
                 </div>
               </div>

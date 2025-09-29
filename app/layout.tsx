@@ -6,6 +6,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from "@/contexts/CartContext";
+import Script from "next/script";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +30,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <Script
+          src="https://h.online-metrix.net/fp/tags.js?org_id=tu_org_id&session_id={{merchant_id}}{{site_transaction_id}}"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body
         className={`${geist.variable} ${geistMono.variable} antialiased`}
       >
