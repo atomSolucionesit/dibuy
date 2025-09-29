@@ -3,7 +3,7 @@ import {
   Product,
   ProductFormData,
   ProductUploadImageResponse,
-  PaginatedProductsResponse
+  PaginatedProductsResponse,
 } from "../../../types/api";
 import { api } from "@/api";
 
@@ -22,7 +22,7 @@ export const getProducts = async (
 ): Promise<PaginatedProductsResponse> => {
   try {
     const response = await api.get(`/products`, {
-      //params: { page, size },
+      params: { page, size },
     });
     return response.data;
   } catch (error) {
