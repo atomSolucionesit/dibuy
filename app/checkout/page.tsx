@@ -9,6 +9,7 @@ import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
 import { createSale } from "@/api/sales/saleService"
 import { createToken, createPayment, getPaymentStatus } from "@/services/payments"
+import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
   { id: "credit", name: "Tarjeta de crédito", icon: CreditCard },
@@ -23,6 +24,7 @@ const shippingMethods = [
 ]
 
 export default function CheckoutPage() {
+  const deviceFingerprintId = useDeviceFingerprint();
   const router = useRouter()
   const { state, updateQuantity, removeItem, clearCart } = useCart()
   const [step, setStep] = useState(1)
@@ -30,6 +32,7 @@ export default function CheckoutPage() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    dni:"",
     email: "",
     phone: "",
     address: "",
@@ -73,7 +76,7 @@ const handleCreateSale = async (e: React.FormEvent) => {
       paymentCharge: {
         amountPaid: 0,
         turned: 0,
-        isCredit: false,
+        isCredit: true,
         date: new Date().toISOString(),
         dueDate: new Date().toISOString(),
         outstandingBalance: 0,
@@ -98,19 +101,34 @@ const handleCreateSale = async (e: React.FormEvent) => {
 // Paso 2: procesar pago
 const handleProcessPayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    // if (!deviceFingerprintId) {
+    //   console.log(deviceFingerprintId);
+      
+    //   console.error("DeviceFingerprintID no disponible todavía");
+    //   return;
+    // }
     try {
       // 1. Tokenizar tarjeta
       const tokenData = await createToken({
-        card_number: cardNumber,
-        card_expiration_month: expMonth,
-        card_expiration_year: expYear,
-        security_code: cvv,
-      });
-
-      const token = tokenData.info.id;
+      card_number: cardNumber,
+      card_expiration_month: expMonth,
+      card_expiration_year: expYear,
+      security_code: cvv,
+      card_holder_name: `${formData.firstName} ${formData.lastName}`,
+      card_holder_identification: {
+        type: "dni",
+        number: formData.dni, // pedís este campo en tu form
+      },
+    });
+    console.log("TOKEN: ", tokenData);
+    
+    const token = tokenData.id;
 
       // 2. Crear pago
-      const payment = await createPayment(token, total, saleId);
+      const newTotal = Math.round(total * 100)
+      console.log("AMOUNT: ", newTotal);
+      
+      const payment = await createPayment(token, newTotal, saleId, /*deviceFingerprintId*/);
 
       // 3. Consultar estado
       const paymentInfo = await getPaymentStatus(payment.id);
@@ -194,6 +212,16 @@ const handleProcessPayment = async (e: React.FormEvent) => {
                         className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                       />
                     </div>
+                    <div>
+                    <label className="block text-sm font-medium mb-2">DNI</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.dni}
+                      onChange={(e) => setFormData({...formData, dni: e.target.value})}
+                      className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
+                    />
+                  </div>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
