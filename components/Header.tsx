@@ -13,7 +13,7 @@ export default function Header() {
   const { state } = useCart()
   const pathname = usePathname()
 
-  const isCartPage = pathname === "/carrito"
+  const isCartPage = pathname === "/carrito" || pathname === "/checkout"
 
   return (
     <header className="bg-blanco shadow-sm sticky top-0 z-50 border-b border-gray-100">
