@@ -4,30 +4,39 @@ import { useEffect, useState } from "react"
 
 declare global {
   interface Window {
-    FPUtils: any
+    CybersourceFP?: {
+      getDeviceFingerprint: (options: {
+        company_id: string
+        callback: (res: { device_unique_id: string }) => void
+      }) => void
+    }
   }
 }
 
 export const useDeviceFingerprint = () => {
-  const [deviceFingerprintId, setDeviceFingerprintId] = useState<string | null>(null)
+  const [deviceUniqueId, setDeviceUniqueId] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!window.FPUtils) {
-      console.warn("fraud-prevention.js todavía no cargó")
+    const companyId = process.env.NEXT_PUBLIC_PAYWAY_COMPANY_ID
+
+    if (!companyId) {
+      console.error("Falta NEXT_PUBLIC_PAYWAY_COMPANY_ID en .env")
       return
     }
 
-    try {
-      const siteId = process.env.NEXT_PUBLIC_PAYWAY_SITE_ID
-      const fp = new window.FPUtils(siteId)
-      const data = fp.getData()
-
-      console.log("Fingerprint generado:", data)
-      setDeviceFingerprintId(data.deviceFingerprintId)
-    } catch (err) {
-      console.error("Error al inicializar fingerprint:", err)
+    if (!window.CybersourceFP) {
+      console.warn("fingerprint.js todavía no cargó")
+      return
     }
+
+    window.CybersourceFP.getDeviceFingerprint({
+      company_id: companyId,
+      callback: (res) => {
+        console.log("Fingerprint generado:", res.device_unique_id)
+        setDeviceUniqueId(res.device_unique_id)
+      },
+    })
   }, [])
 
-  return deviceFingerprintId
+  return deviceUniqueId
 }
