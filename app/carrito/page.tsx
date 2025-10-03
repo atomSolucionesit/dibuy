@@ -11,8 +11,8 @@ import { getShippingCost } from "@/services/shipping"
 import { provincias } from "@/data/provincias"
 
 export default function CartPage() {
-  const { state, updateQuantity, removeItem, clearCart } = useCart()
-  const [shipping, setShipping] = useState<number | null>(null)
+  const { state, updateQuantity, removeItem, clearCart, setShipping, clearShipping } = useCart()
+  //const [shipping, setShipping] = useState<number | null>(null)
   const [loadingShipping, setLoadingShipping] = useState(false)
   const [provincia, setProvincia] = useState("AR-C")
   const [codigoPostal, setCodigoPostal] = useState("")
@@ -58,7 +58,7 @@ export default function CartPage() {
   }
 
   useEffect(() => {
-    if (state.items.length === 0) setShipping(null)
+    if (state.items.length === 0) clearShipping()
   }, [state.items])
 
   if (state.items.length === 0) {
@@ -230,7 +230,10 @@ export default function CartPage() {
                             value={selectedQuote?.name || ""}
                             onChange={(e) => {
                               const q = quotes.find((quote) => quote.name === e.target.value)
-                              if (q) setSelectedQuote(q)
+                              if (q) {
+                                setSelectedQuote(q)
+                                setShipping(q)
+                              }
                             }}
                             className="w-full px-3 py-2 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                           >

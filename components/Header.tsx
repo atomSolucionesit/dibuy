@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Search, ShoppingCart, Menu, X, User, Heart } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
+import { motion } from "framer-motion";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -15,25 +16,40 @@ export default function Header() {
 
   const isCartPage = pathname === "/carrito" || pathname === "/checkout"
 
+  const messages = [
+    "🚚 Envío gratis en compras superiores a $50.000",
+    "💳 15% OFF pagando con transferencia",
+    "🔥 Descuentos exclusivos en laptops",
+    "🎁 3 y 6 cuotas sin interés"
+  ]
+
   return (
     <header className="bg-blanco shadow-sm sticky top-0 z-50 border-b border-gray-100">
-      <div className="container mx-auto px-4">
-        {/* Top bar - Hidden on mobile */}
-        { !isCartPage && (
-        <div className="hidden md:flex justify-between items-center py-1 text-xs text-gray-600 border-b border-gray-100">
-          <div className="flex space-x-4">
-            <span className="text-negro">🚚 Envío gratis en compras superiores a $50.000</span>
+      {/* Top bar - Hidden on mobile */}
+        {!isCartPage && (
+          <div className="w-full bg-black text-white overflow-hidden border-b border-gray-700">
+            <motion.div
+              className="flex whitespace-nowrap"
+              animate={{ x: ["0%", "-100%"] }}
+              transition={{ 
+                repeat: Infinity, 
+                duration: 20, // velocidad
+                ease: "linear" 
+              }}
+            >
+              {[...messages, ...messages].map((msg, index) => (
+                <span
+                  key={index}
+                  className="mx-8 text-sm md:text-base text-yellow-300"
+                >
+                  {msg}
+                </span>
+              ))}
+            </motion.div>
           </div>
-          <div className="flex space-x-4">
-            <Link href="/ayuda" className="nav-link">
-              Ayuda
-            </Link>
-            <Link href="/contacto" className="nav-link">
-              Contacto
-            </Link>
-          </div>
-        </div>
         )}
+      <div className="container mx-auto px-4">
+        
 
         {/* Main header */}
         <div className="flex items-center justify-between py-2">
@@ -66,18 +82,18 @@ export default function Header() {
             </button>
 
             {/* User account */}
-            <Link href="/perfil" className="hidden md:flex items-center space-x-1 nav-link">
+            {/* <Link href="/perfil" className="hidden md:flex items-center space-x-1 nav-link">
               <User className="h-4 w-4" />
               <span className="text-xs">Mi cuenta</span>
-            </Link>
+            </Link> */}
 
             {/* Wishlist */}
-            <Link href="/favoritos" className="relative nav-link">
+            {/* <Link href="/favoritos" className="relative nav-link">
               <Heart className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 badge-zafiro h-4 w-4 flex items-center justify-center text-xs">
                 2
               </span>
-            </Link>
+            </Link> */}
 
             {/* Cart */}
             <Link href="/carrito" className="relative nav-link">

@@ -75,11 +75,18 @@ export const getPaymentStatus = async (paymentId: string) => {
 
 /* 
 {
+  APPROVED
   card_number: "4507990000000010",
   card_expiration_month: "12",
   card_expiration_year: "25",
   security_code: "123",
-  card_holder_name: "Juan Perez",
-  card_holder_identification: { type: "dni", number: "40111222" },
+}
+
+{
+ REJECTED
+  card_number: "4000000000000002",
+  card_expiration_month: "12",
+  card_expiration_year: "30",
+  security_code: "123",
 }
 */
