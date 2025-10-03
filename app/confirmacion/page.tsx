@@ -5,8 +5,9 @@ import Link from "next/link"
 import { CheckCircle, Package, CreditCard, Home } from "lucide-react"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import { Suspense } from "react"
 
-export default function ConfirmationPage() {
+function ConfirmationContent() {
   const searchParams = useSearchParams()
   const paymentId = searchParams.get("payment")
 
@@ -74,5 +75,17 @@ export default function ConfirmationPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <ConfirmationContent />
+    </Suspense>
   )
 }
