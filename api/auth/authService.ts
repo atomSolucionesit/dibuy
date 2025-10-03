@@ -34,6 +34,7 @@ export const login = async (data: LoginCredentials): Promise<LoginResponse> => {
 
 export const logout = async (): Promise<void> => {
   const access_token = localStorage.getItem("access_token");
+  
   if (access_token) {
     await axios.patch(
       `${URLAPI}/auth/logout`,
