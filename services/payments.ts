@@ -44,14 +44,14 @@ export const createPayment = async (
   token: string,
   amount: number,
   saleId: string | null,
-  //deviceFingerprintId: string
+  deviceFingerprintId: string | null
 ) => {
   try {
     const res = await api.post("/payway/payment", {
       token,
       amount,
       saleId,
-      //deviceFingerprintId
+      deviceFingerprintId
     });
     return res.data;
   } catch (error) {
@@ -75,9 +75,9 @@ export const getPaymentStatus = async (paymentId: string) => {
 
 /* 
 {
-  card_number: "4111111111111111",
+  card_number: "4507990000000010",
   card_expiration_month: "12",
-  card_expiration_year: "2030",
+  card_expiration_year: "25",
   security_code: "123",
   card_holder_name: "Juan Perez",
   card_holder_identification: { type: "dni", number: "40111222" },

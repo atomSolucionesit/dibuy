@@ -8,6 +8,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from "@/contexts/CartContext";
 import Script from "next/script";
 
+const companyId = process.env.NEXT_PUBLIC_PAYWAY_COMPANY_ID
+
 const geist = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -31,10 +33,11 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        <Script
-          src="https://h.online-metrix.net/fp/tags.js?org_id=tu_org_id&session_id={{merchant_id}}{{site_transaction_id}}"
+        {/* <Script
+          id="threatmetrix"
+          src={`https://h.online-metrix.net/fp/tags.js?org_id=${companyId}&session_id=`} ESTO ES PARA GENERAR FINGERPRINT
           strategy="beforeInteractive"
-        />
+        /> */}
       </head>
       <body
         className={`${geist.variable} ${geistMono.variable} antialiased`}

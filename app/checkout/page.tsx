@@ -7,9 +7,9 @@ import { Minus, Plus, Trash2, CreditCard, Truck, Shield, RotateCcw, CheckCircle 
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
-import { createSale } from "@/api/sales/saleService"
+import { createSale, updateSale } from "@/api/sales/saleService"
 import { createToken, createPayment, getPaymentStatus } from "@/services/payments"
-import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
+//import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
   { id: "credit", name: "Tarjeta de crédito", icon: CreditCard },
@@ -24,7 +24,7 @@ const shippingMethods = [
 ]
 
 export default function CheckoutPage() {
-  const deviceFingerprintId = useDeviceFingerprint();
+  //const deviceFingerprintId = useDeviceFingerprint();
   const router = useRouter()
   const { state, updateQuantity, removeItem, clearCart } = useCart()
   const [step, setStep] = useState(1)
@@ -101,12 +101,10 @@ const handleCreateSale = async (e: React.FormEvent) => {
 // Paso 2: procesar pago
 const handleProcessPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    // if (!deviceFingerprintId) {
-    //   console.log(deviceFingerprintId);
-      
-    //   console.error("DeviceFingerprintID no disponible todavía");
-    //   return;
-    // }
+    if (!saleId) {
+      console.error("Sale ID no disponible");
+      return;
+    }
     try {
       // 1. Tokenizar tarjeta
       const tokenData = await createToken({
@@ -120,25 +118,23 @@ const handleProcessPayment = async (e: React.FormEvent) => {
         number: formData.dni, // pedís este campo en tu form
       },
     });
-    console.log("TOKEN: ", tokenData);
     
     const token = tokenData.id;
 
       // 2. Crear pago
       const newTotal = Math.round(total * 100)
-      console.log("AMOUNT: ", newTotal);
       
-      const payment = await createPayment(token, newTotal, saleId, /*deviceFingerprintId*/);
+      const payment: any = await createPayment(token, newTotal, saleId, saleId /*aca va el fignerprint*/);
 
-      // 3. Consultar estado
-      const paymentInfo = await getPaymentStatus(payment.id);
-
-      if (paymentInfo.status === "PAID") {
+      // 3. Actualizar venta en backend
+      if (payment.data?.status === "approved") {
+        await updateSale(saleId, { status: "COMPLETED" })
         clearCart();
-        router.push("/confirmacion");
+        router.push("/");
       } else {
         alert("El pago no se pudo procesar");
       }
+      
     } catch (err) {
       console.error(err);
       alert("Error al procesar el pago");
