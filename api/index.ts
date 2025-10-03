@@ -13,7 +13,7 @@ api.interceptors.request.use((config) => {
   //const token = localStorage.getItem("access_token");
   //if (token) {
 
-    config.headers.Authorization = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjcsInVzZXJJZCI6NywiYnJhbmNoSWQiOjMsInVzZXJuYW1lIjoiYWRtaW5fY29tcGFueV81IiwiY29tcGFueUlkIjo1LCJjb21wYW55VG9rZW4iOiIwOTEyMTgiLCJpc0FkbWluIjp0cnVlLCJjdXJyZW5jeUlkIjoxLCJyb2xlSWQiOjYsInJvbGVDb2RlIjoiQURNSU4iLCJpYXQiOjE3NTkyNDUyOTcsImV4cCI6MTc1OTg1MDA5N30.aq3qzav1hikxdNJkZRvn4Ni4px_dEX0P7vl5D3TGalc`;
+  config.headers.Authorization = `Bearer ${process.env.NEXT_COMPANY_TOKEN}`;
   //}
 
   if (config.data instanceof FormData) {
