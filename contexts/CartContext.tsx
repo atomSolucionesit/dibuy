@@ -4,31 +4,21 @@ import type React from "react"
 import { createContext, useContext, useReducer, useEffect } from "react"
 import { Product } from "@/types/api"
 
-// export interface Product {
-//   id: number
-//   name: string
-//   price: number
-//   originalPrice?: number
-//   image: string
-//   category: string
-//   brand: string
-//   rating: number
-//   reviews: number
-//   description: string
-//   specifications: Record<string, string>
-//   inStock: boolean
-//   badge?: string
-// }
-
 export interface CartItem extends Product {
   quantity: number
   weight?: number
+}
+
+interface ShippingOption {
+  name: string
+  price: number
 }
 
 interface CartState {
   items: CartItem[]
   total: number
   itemCount: number
+  shipping?: ShippingOption | null
 }
 
 type CartAction =
@@ -37,6 +27,8 @@ type CartAction =
   | { type: "UPDATE_QUANTITY"; payload: { id: number | string; quantity: number } }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_CART"; payload: CartState }
+  | { type: "SET_SHIPPING"; payload: ShippingOption }
+  | { type: "CLEAR_SHIPPING" }
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
@@ -88,6 +80,12 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "LOAD_CART":
       return action.payload
 
+    case "SET_SHIPPING":
+      return { ...state, shipping: action.payload }
+
+    case "CLEAR_SHIPPING":
+      return { ...state, shipping: null }
+
     default:
       return state
   }
@@ -99,6 +97,8 @@ interface CartContextType {
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
   clearCart: () => void
+  setShipping: (shipping: ShippingOption) => void
+  clearShipping: () => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -108,6 +108,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     items: [],
     total: 0,
     itemCount: 0,
+    shipping: null,
   })
 
   // Load cart from localStorage on mount
@@ -144,8 +145,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: "CLEAR_CART" })
   }
 
+  const setShipping = (shipping: ShippingOption) => {
+    dispatch({ type: "SET_SHIPPING", payload: shipping })
+  }
+
+  const clearShipping = () => {
+    dispatch({ type: "CLEAR_SHIPPING" })
+  }
+
   return (
-    <CartContext.Provider value={{ state, addItem, removeItem, updateQuantity, clearCart }}>
+    <CartContext.Provider value={{ state, addItem, removeItem, updateQuantity, clearCart, setShipping, clearShipping}}>
       {children}
     </CartContext.Provider>
   )

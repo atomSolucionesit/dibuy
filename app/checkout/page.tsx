@@ -59,7 +59,8 @@ export default function CheckoutPage() {
   const selectedShipping = shippingMethods.find(m => m.id === formData.shippingMethod)
   const subtotal = state.total
   const shipping = selectedShipping?.price || 0
-  const total = subtotal + shipping
+  const envio = state.shipping
+  const total = subtotal + (envio?.price || 0)
 
 // Paso 1: crear venta
 const handleCreateSale = async (e: React.FormEvent) => {
@@ -130,9 +131,10 @@ const handleProcessPayment = async (e: React.FormEvent) => {
       if (payment.data?.status === "approved") {
         await updateSale(saleId, { status: "COMPLETED" })
         clearCart();
-        router.push("/");
+        router.push("/payment/success");
       } else {
-        alert("El pago no se pudo procesar");
+        clearCart();
+        router.push("/payment/failure");
       }
       
     } catch (err) {
@@ -385,9 +387,7 @@ const handleProcessPayment = async (e: React.FormEvent) => {
                 </div>
                 <div className="flex justify-between">
                   <span>Envío:</span>
-                  <span className={shipping === 0 ? "text-green-600" : ""}>
-                    {shipping === 0 ? "Gratis" : formatPrice(shipping)}
-                  </span>
+                  <span>{envio ? `${envio.name} - ${formatPrice(envio.price)}` : "-"}</span>
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between font-bold text-lg">
