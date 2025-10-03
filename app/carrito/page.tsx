@@ -17,6 +17,8 @@ export default function CartPage() {
   const [provincia, setProvincia] = useState("AR-C")
   const [codigoPostal, setCodigoPostal] = useState("")
   const [empresa, setEmpresa] = useState("correoArgentino")
+  const [quotes, setQuotes] = useState<{ name: string; price: number }[]>([])
+  const [selectedQuote, setSelectedQuote] = useState<{ name: string; price: number } | null>(null)
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -32,8 +34,25 @@ export default function CartPage() {
 
     getShippingCost("1001", codigoPostal, "5", empresa)
       .then((data) => {
-        console.log("data:", data)
-        setShipping(data[0]?.quotes[0].office || 0)
+        const servicios = data || []
+        const opciones: { name: string; price: number }[] = []
+        const filtrados = servicios.filter((s: any) => s.fiscalType === "py")
+
+        filtrados.forEach((s: any) => {
+          if (s.quotes && s.quotes.length > 0) {
+            s.quotes.forEach((q: any) => {
+              if (q.office) {
+                opciones.push({ name: `${q.name} a sucursal`, price: q.office })
+              }
+              if (q.door) {
+                opciones.push({ name: `${q.name} a domicilio`, price: q.door })
+              }
+            })
+          }
+        })
+
+        setQuotes(opciones)
+        if (opciones.length > 0) setSelectedQuote(opciones[0])
       })
       .finally(() => setLoadingShipping(false))
   }
@@ -204,6 +223,25 @@ export default function CartPage() {
                       >
                         Calcular envío
                       </button>
+                      {quotes.length > 0 && (
+                        <div className="mt-4">
+                          <label className="block text-sm mb-1">Método de envío</label>
+                          <select
+                            value={selectedQuote?.name || ""}
+                            onChange={(e) => {
+                              const q = quotes.find((quote) => quote.name === e.target.value)
+                              if (q) setSelectedQuote(q)
+                            }}
+                            className="w-full px-3 py-2 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
+                          >
+                            {quotes.map((q) => (
+                              <option key={q.name} value={q.name}>
+                                {q.name.toUpperCase()} - {formatPrice(q.price)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -213,12 +251,14 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Envío:</span>
-                  <span>{formatPrice(shipping || 0)}</span>
+                  <span>{selectedQuote ? formatPrice(selectedQuote.price) : "-"}</span>
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total:</span>
-                    <span className="text-primary">{formatPrice(state.total + (shipping || 0))}</span>
+                    <span className="text-primary">
+                      {formatPrice(state.total + (selectedQuote?.price || 0))}
+                    </span>
                   </div>
                 </div>
               </div>
