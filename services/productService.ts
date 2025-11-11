@@ -1,4 +1,4 @@
-import apiClient from '@/lib/api';
+import { api } from '@/api';
 import { 
   Product, 
   ProductFilters, 
@@ -24,7 +24,7 @@ export class ProductService {
         ))
       });
 
-      const response = await apiClient.get<ApiResponse<PaginatedResponse<Product>>>(
+      const response = await api.get<ApiResponse<PaginatedResponse<Product>>>(
         `/products?${params.toString()}`
       );
       
@@ -37,7 +37,7 @@ export class ProductService {
   // Obtener producto por ID
   static async getProductById(id: string): Promise<Product> {
     try {
-      const response = await apiClient.get<ApiResponse<Product>>(`/products/${id}`);
+      const response = await api.get<ApiResponse<Product>>(`/products/${id}`);
       return response.data.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al obtener producto');
@@ -60,7 +60,7 @@ export class ProductService {
         ))
       });
 
-      const response = await apiClient.get<ApiResponse<PaginatedResponse<Product>>>(
+      const response = await api.get<ApiResponse<PaginatedResponse<Product>>>(
         `/categories/${categorySlug}/products?${params.toString()}`
       );
       
@@ -73,7 +73,7 @@ export class ProductService {
   // Obtener productos destacados
   static async getFeaturedProducts(limit: number = 8): Promise<Product[]> {
     try {
-      const response = await apiClient.get<ApiResponse<Product[]>>(
+      const response = await api.get<ApiResponse<Product[]>>(
         `/products/featured?limit=${limit}`
       );
       return response.data.data;
@@ -85,7 +85,7 @@ export class ProductService {
   // Obtener productos en oferta
   static async getOnSaleProducts(limit: number = 8): Promise<Product[]> {
     try {
-      const response = await apiClient.get<ApiResponse<Product[]>>(
+      const response = await api.get<ApiResponse<Product[]>>(
         `/products/on-sale?limit=${limit}`
       );
       return response.data.data;
@@ -97,7 +97,7 @@ export class ProductService {
   // Obtener productos relacionados
   static async getRelatedProducts(productId: string, limit: number = 4): Promise<Product[]> {
     try {
-      const response = await apiClient.get<ApiResponse<Product[]>>(
+      const response = await api.get<ApiResponse<Product[]>>(
         `/products/${productId}/related?limit=${limit}`
       );
       return response.data.data;
@@ -123,7 +123,7 @@ export class ProductService {
         ))
       });
 
-      const response = await apiClient.get<ApiResponse<PaginatedResponse<Product>>>(
+      const response = await api.get<ApiResponse<PaginatedResponse<Product>>>(
         `/products/search?${params.toString()}`
       );
       
@@ -136,7 +136,7 @@ export class ProductService {
   // Obtener todas las categorías
   static async getCategories(): Promise<Category[]> {
     try {
-      const response = await apiClient.get<ApiResponse<Category[]>>('/categories');
+      const response = await api.get<ApiResponse<Category[]>>('/categories');
       return response.data.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al obtener categorías');
@@ -146,7 +146,7 @@ export class ProductService {
   // Obtener categoría por slug
   static async getCategoryBySlug(slug: string): Promise<Category> {
     try {
-      const response = await apiClient.get<ApiResponse<Category>>(`/categories/${slug}`);
+      const response = await api.get<ApiResponse<Category>>(`/categories/${slug}`);
       return response.data.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al obtener categoría');
@@ -160,7 +160,7 @@ export class ProductService {
     limit: number = 10
   ): Promise<PaginatedResponse<Review>> {
     try {
-      const response = await apiClient.get<ApiResponse<PaginatedResponse<Review>>>(
+      const response = await api.get<ApiResponse<PaginatedResponse<Review>>>(
         `/products/${productId}/reviews?page=${page}&limit=${limit}`
       );
       return response.data.data;
@@ -176,7 +176,7 @@ export class ProductService {
     comment: string
   ): Promise<Review> {
     try {
-      const response = await apiClient.post<ApiResponse<Review>>(`/products/${productId}/reviews`, {
+      const response = await api.post<ApiResponse<Review>>(`/products/${productId}/reviews`, {
         rating,
         comment
       });
@@ -189,7 +189,7 @@ export class ProductService {
   // Obtener marcas disponibles
   static async getBrands(): Promise<string[]> {
     try {
-      const response = await apiClient.get<ApiResponse<string[]>>('/products/brands');
+      const response = await api.get<ApiResponse<string[]>>('/products/brands');
       return response.data.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al obtener marcas');
@@ -203,7 +203,7 @@ export class ProductService {
     limit: number = 12
   ): Promise<PaginatedResponse<Product>> {
     try {
-      const response = await apiClient.get<ApiResponse<PaginatedResponse<Product>>>(
+      const response = await api.get<ApiResponse<PaginatedResponse<Product>>>(
         `/products/brand/${brand}?page=${page}&limit=${limit}`
       );
       return response.data.data;
@@ -215,7 +215,7 @@ export class ProductService {
   // Obtener productos más vendidos
   static async getBestSellers(limit: number = 8): Promise<Product[]> {
     try {
-      const response = await apiClient.get<ApiResponse<Product[]>>(
+      const response = await api.get<ApiResponse<Product[]>>(
         `/products/best-sellers?limit=${limit}`
       );
       return response.data.data;
@@ -227,7 +227,7 @@ export class ProductService {
   // Obtener productos nuevos
   static async getNewArrivals(limit: number = 8): Promise<Product[]> {
     try {
-      const response = await apiClient.get<ApiResponse<Product[]>>(
+      const response = await api.get<ApiResponse<Product[]>>(
         `/products/new-arrivals?limit=${limit}`
       );
       return response.data.data;
@@ -239,7 +239,7 @@ export class ProductService {
   // Verificar stock de un producto
   static async checkProductStock(productId: string, quantity: number = 1): Promise<boolean> {
     try {
-      const response = await apiClient.get<ApiResponse<{ available: boolean }>>(
+      const response = await api.get<ApiResponse<{ available: boolean }>>(
         `/products/${productId}/stock?quantity=${quantity}`
       );
       return response.data.data.available;
