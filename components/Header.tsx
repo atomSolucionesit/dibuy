@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, ShoppingCart, Menu, X, User, Heart } from "lucide-react";
+import { Search, ShoppingCart, Menu, X, User, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { motion } from "framer-motion";
+import { ProductService } from "@/services/productService";
+import { Category } from "@/types/api";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const { state } = useCart();
   const pathname = usePathname();
 
@@ -22,6 +26,36 @@ export default function Header() {
     "🔥 Descuentos exclusivos en laptops",
     "🎁 3 y 6 cuotas sin interés",
   ];
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoriesData = await ProductService.getCategories();
+        setCategories(categoriesData.slice(0, 6));
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  const nextCategories = () => {
+    if (categories.length > 6) {
+      setCurrentCategoryIndex((prev) => 
+        prev + 6 >= categories.length ? 0 : prev + 6
+      );
+    }
+  };
+
+  const prevCategories = () => {
+    if (categories.length > 6) {
+      setCurrentCategoryIndex((prev) => 
+        prev - 6 < 0 ? Math.max(0, categories.length - 6) : prev - 6
+      );
+    }
+  };
+
+  const visibleCategories = categories.slice(currentCategoryIndex, currentCategoryIndex + 6);
 
   return (
     <header className="bg-blanco shadow-sm sticky top-0 z-50 border-b border-gray-100">
@@ -144,51 +178,64 @@ export default function Header() {
               isMenuOpen ? "block" : "hidden"
             } md:block border-t border-gray-100 md:border-t-0`}
           >
-            <ul className="flex flex-col md:flex-row md:justify-center space-y-1 md:space-y-0 md:space-x-6 py-2">
-              <li>
-                <Link
-                  href="/categoria/smartphones"
-                  className="nav-link block py-1 md:py-0 text-sm"
+            {/* Desktop Categories Carousel */}
+            <div className="hidden md:flex items-center justify-center py-2 relative">
+              {categories.length > 6 && (
+                <button
+                  onClick={prevCategories}
+                  className="absolute left-0 p-1 hover:text-magenta transition-colors"
                 >
-                  📱 Smartphones
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/categoria/laptops"
-                  className="nav-link block py-1 md:py-0 text-sm"
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              )}
+              
+              <ul className="flex space-x-6">
+                {visibleCategories.map((category) => (
+                  <li key={category.id}>
+                    <Link
+                      href={`/categoria/${category.slug || category.name.toLowerCase()}`}
+                      className="nav-link text-sm whitespace-nowrap"
+                    >
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <Link
+                    href="/ofertas"
+                    className="nav-link text-sm text-zafiro font-semibold hover:text-zafiro-light whitespace-nowrap"
+                  >
+                    🔥 Ofertas
+                  </Link>
+                </li>
+              </ul>
+              
+              {categories.length > 6 && (
+                <button
+                  onClick={nextCategories}
+                  className="absolute right-0 p-1 hover:text-magenta transition-colors"
                 >
-                  💻 Laptops
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/categoria/tablets"
-                  className="nav-link block py-1 md:py-0 text-sm"
-                >
-                  📱 Tablets
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/categoria/accesorios"
-                  className="nav-link block py-1 md:py-0 text-sm"
-                >
-                  🎧 Accesorios
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/categoria/gaming"
-                  className="nav-link block py-1 md:py-0 text-sm"
-                >
-                  🎮 Gaming
-                </Link>
-              </li>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Mobile Categories List */}
+            <ul className="flex flex-col md:hidden space-y-1 py-2">
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link
+                    href={`/categoria/${category.slug || category.name.toLowerCase()}`}
+                    className="nav-link block py-1 text-sm"
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
               <li>
                 <Link
                   href="/ofertas"
-                  className="nav-link block py-1 md:py-0 text-sm text-zafiro font-semibold hover:text-zafiro-light"
+                  className="nav-link block py-1 text-sm text-zafiro font-semibold hover:text-zafiro-light"
                 >
                   🔥 Ofertas
                 </Link>

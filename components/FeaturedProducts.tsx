@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Star, Heart, ShoppingCart } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
 //import { products } from "@/data/products"
-import { productService } from "@/api/products/catalogo/productService"
+import { ProductService } from "@/services/productService"
 import { Product } from "@/types/api"
 import { useState, useEffect } from "react"
 
@@ -26,13 +26,11 @@ export default function FeaturedProducts() {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      const productsResponse = await productService.getProducts(1, 10);
-      setProductos(productsResponse.info.data);
-      //setTotalPages(productsResponse.info.meta.pages);
-      //setTotalItems(productsResponse.info.meta.total);
+      const productsResponse = await ProductService.getProducts(1, 10);
+      console.log('Products response structure:', productsResponse);
+      setProductos(productsResponse.data || []);
     } catch (error) {
       console.error("Error fetching products:", error);
-      window.Error("Error al cargar los productos");
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +114,7 @@ export default function FeaturedProducts() {
                   </div>
                   {product.originalPrice && (
                     <span className="text-sm text-green-600 font-medium">
-                      💰 Ahorrás {formatPrice(product.originalPrice - product.price)}
+                      💰 Ahorrás {formatPrice(product.originalPrice - product.sellingPrice)}
                     </span>
                   )}
                 </div>

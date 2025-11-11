@@ -344,6 +344,32 @@ const handleProcessPayment = async (e: React.FormEvent) => {
                   />
                 </div>
 
+                {/* Payway Security Section */}
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <div className="flex items-center justify-center mb-3">
+                    <Image
+                      src="https://cdn.atomsolucionesit.com.ar/media/dibuy/payway.svg"
+                      alt="Payway - Procesamiento seguro"
+                      width={120}
+                      height={40}
+                      className="h-8 w-auto"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 text-center mb-2">
+                    Tus datos están protegidos con encriptación SSL
+                  </p>
+                  <div className="text-center">
+                    <a
+                      href="https://cdn.atomsolucionesit.com.ar/media/dibuy/Declaraci%C3%B3n%20sobre%20el%20uso%20de%20medios%20de%20pago%20y%20procesamiento%20de%20transacciones.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Ver declaración de procesamiento de pagos
+                    </a>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"

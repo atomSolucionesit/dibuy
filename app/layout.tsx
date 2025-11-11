@@ -21,8 +21,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dibuy - Tu tienda de tecnología",
+  title: "Dibuy",
   description: "Encuentra los mejores productos tecnológicos al mejor precio",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -33,6 +36,10 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png" />
+        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         {/* <Script
           id="threatmetrix"
           src={`https://h.online-metrix.net/fp/tags.js?org_id=${companyId}&session_id=`} ESTO ES PARA GENERAR FINGERPRINT

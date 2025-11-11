@@ -107,9 +107,10 @@ export interface ProductImage {
 
 // Tipos para categorías
 export interface Category {
-  categoryId: any;
+  categoryId?: any;
   id: string;
   name: string;
+  slug?: string;
   description?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -140,7 +141,7 @@ export interface User {
   phone?: string;
   avatar?: string;
   isActive: boolean;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
   createdAt: string;
   updatedAt: string;
 }
@@ -198,10 +199,10 @@ export interface Order {
   userId: string;
   items: OrderItem[];
   total: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   shippingAddress: Address;
   paymentMethod: string;
-  paymentStatus: 'pending' | 'paid' | 'failed';
+  paymentStatus: "pending" | "paid" | "failed";
   createdAt: string;
   updatedAt: string;
 }

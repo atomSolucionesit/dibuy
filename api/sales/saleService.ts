@@ -3,6 +3,7 @@ import { api } from "..";
 export const createSale = async (saleData: any): Promise<any> => {
   try {
     const response = await api.post(`/sales`, saleData);
+
     return response.data;
   } catch (error) {
     console.error("Error creating sale:", error);
@@ -22,5 +23,5 @@ export const updateSale = async (id: string, saleData: any): Promise<any> => {
 
 export const saleService = {
   createSale,
-  updateSale
+  updateSale,
 };

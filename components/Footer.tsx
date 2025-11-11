@@ -13,7 +13,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <Image src="/logo.png" alt="DIBUY" width={120} height={40} className="h-10 w-auto" />
+            <Image src="/logo.png" alt="DIBUY" width={120} height={40} className="w-auto h-10" style={{ width: 'auto', height: '40px' }} />
             <p className="text-gray-300">
               Tu tienda de tecnología de confianza. Productos de calidad con la mejor atención al cliente.
             </p>
