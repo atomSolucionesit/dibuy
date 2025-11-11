@@ -11,8 +11,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-
-  config.headers.Authorization = `Bearer 6679e944-d883-4a9a-971f-997a28cdcf29`;
+  config.headers.Authorization = `Bearer ${token}`;
 
   if (config.data instanceof FormData) {
     delete config.headers["Content-Type"];
