@@ -1,51 +1,51 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
-import Image from "next/image"
-import Link from "next/link"
-import { Star, Heart, ShoppingCart, Filter } from "lucide-react"
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
-import { ProductService } from "@/services/productService"
-import { Product } from "@/types/api"
-import { useCart } from "@/contexts/CartContext"
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { Star, Heart, ShoppingCart, Filter } from "lucide-react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { ProductService } from "@/services/productService";
+import { Product } from "@/types/api";
+import { useCart } from "@/contexts/CartContext";
 
 export default function CategoryPage() {
-  const params = useParams()
-  const slug = params.slug as string
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [categoryName, setCategoryName] = useState("")
-  const { addItem } = useCart()
+  const params = useParams();
+  const slug = params.slug as string;
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categoryName, setCategoryName] = useState("");
+  const { addItem } = useCart();
 
   useEffect(() => {
     const loadCategoryProducts = async () => {
       try {
-        setLoading(true)
-        const response = await ProductService.getProductsByCategory(slug)
-        setProducts(response.data || [])
-        setCategoryName(slug.charAt(0).toUpperCase() + slug.slice(1))
+        setLoading(true);
+        const response = await ProductService.getProductsByCategory(slug);
+        setProducts(response.data || []);
+        setCategoryName(slug.charAt(0).toUpperCase() + slug.slice(1));
       } catch (error) {
-        console.error('Error loading category products:', error)
-        setProducts([])
+        console.error("Error loading category products:", error);
+        setProducts([]);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     if (slug) {
-      loadCategoryProducts()
+      loadCategoryProducts();
     }
-  }, [slug])
+  }, [slug]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
       style: "currency",
       currency: "ARS",
       minimumFractionDigits: 0,
-    }).format(price)
-  }
+    }).format(price);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -55,7 +55,9 @@ export default function CategoryPage() {
       <section className="bg-gradient-primary text-white py-12">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">{categoryName}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              {categoryName}
+            </h1>
             <p className="text-lg opacity-90">
               {products.length} productos encontrados
             </p>
@@ -121,7 +123,9 @@ export default function CategoryPage() {
                           />
                         ))}
                       </div>
-                      <span className="text-sm text-gray-600">({product.reviews})</span>
+                      <span className="text-sm text-gray-600">
+                        ({product.reviews})
+                      </span>
                     </div>
 
                     <div className="space-y-1">
@@ -137,7 +141,10 @@ export default function CategoryPage() {
                       </div>
                       {product.originalPrice && (
                         <span className="text-sm text-green-600 font-medium">
-                          💰 Ahorrás {formatPrice(product.originalPrice - product.sellingPrice)}
+                          💰 Ahorrás{" "}
+                          {formatPrice(
+                            product.originalPrice - product.sellingPrice
+                          )}
                         </span>
                       )}
                     </div>
@@ -162,9 +169,12 @@ export default function CategoryPage() {
                 <div className="w-24 h-24 mx-auto mb-6 bg-gray-200 rounded-full flex items-center justify-center">
                   <Filter className="h-12 w-12 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No hay productos en esta categoría</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  No hay productos en esta categoría
+                </h3>
                 <p className="text-gray-600 mb-6">
-                  No se encontraron productos para la categoría "{categoryName}".
+                  No se encontraron productos para la categoría "{categoryName}
+                  ".
                 </p>
                 <Link
                   href="/"
@@ -180,5 +190,5 @@ export default function CategoryPage() {
 
       <Footer />
     </div>
-  )
+  );
 }

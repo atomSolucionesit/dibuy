@@ -40,6 +40,6 @@ export const ProductService = {
       `/category/${categoryId}/products?page=${page}&limit=${limit}`
     );
 
-    return response.data.info?.data || response.data;
+    return response.data.info || response.data;
   },
 };

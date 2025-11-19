@@ -6,6 +6,8 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
 import { ProductService } from "@/services/productService";
 import { Product } from "@/types/api";
+import { useCart } from "@/contexts/CartContext";
+import { getProcessedImage } from "@/lib/imageUtils";
 
 interface HeroSlide {
   id: string;
@@ -30,41 +32,57 @@ const gradients = [
 ];
 
 export default function Hero() {
+  const { addItem } = useCart();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [slides, setSlides] = useState<HeroSlide[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processedImages, setProcessedImages] = useState<{[key: string]: string}>({});
 
   // Cargar productos destacados
   useEffect(() => {
     const loadOutstandingProducts = async () => {
       try {
         const products = await ProductService.getOutstandingProducts(4);
-        const heroSlides: HeroSlide[] = (products || []).map(
-          (product: any, index: any) => ({
-            id: product.id,
-            title: product.name,
-            subtitle: product.outstandingDescription || "Producto destacado",
-            description: product.description,
-            badge: product.badge || "⭐ Destacado",
-            image:
-              product.images[0]?.url || "/placeholder.svg?height=400&width=500",
-            primaryButton: {
-              text: "Ver producto",
-              href: `/producto/${product.id}`,
-            },
-            secondaryButton: {
-              text: "Agregar al carrito",
-              href: `/producto/${product.id}`,
-            },
-            gradient: gradients[index % gradients.length],
-            price: product.sellingPrice,
-            originalPrice: product.originalPrice,
-            outstandingDescription: "Al mejor precio",
+        const heroSlides: HeroSlide[] = await Promise.all(
+          (products || []).map(async (product: any, index: any) => {
+            const originalImage = product.images[0]?.url || "/placeholder.svg?height=400&width=500";
+            let processedImage = originalImage;
+            
+            // Procesar imagen para remover fondo
+            try {
+              processedImage = await getProcessedImage(originalImage);
+              setProcessedImages(prev => ({...prev, [product.id]: processedImage}));
+            } catch (error) {
+              console.log('Using original image for:', product.name);
+            }
+            
+            return {
+              id: product.id,
+              title: product.name,
+              subtitle: product.outstandingDescription || "Producto destacado",
+              description: product.description,
+              badge: product.badge || "⭐ Destacado",
+              image: processedImage,
+              primaryButton: {
+                text: "Ver producto",
+                href: `/producto/${product.id}`,
+              },
+              secondaryButton: {
+                text: "Agregar al carrito",
+                href: `/producto/${product.id}`,
+              },
+              gradient: gradients[index % gradients.length],
+              price: product.sellingPrice,
+              originalPrice: product.originalPrice,
+              outstandingDescription: "Al mejor precio",
+            };
           })
         );
         setSlides(heroSlides);
+        setProducts(products || []);
       } catch (error) {
         console.error("Error loading outstanding products:", error);
         // Fallback a slides estáticos si falla la carga
@@ -201,15 +219,18 @@ export default function Hero() {
                       </span>
                       <div className="absolute inset-0 bg-gradient-to-r from-blanco/0 via-blanco/10 to-blanco/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                     </Link>
-                    <Link
-                      href={slide.secondaryButton.href}
+                    <button
+                      onClick={() => {
+                        const product = products.find(p => p.id === slide.id);
+                        if (product) addItem(product);
+                      }}
                       className="group relative overflow-hidden bg-gradient-to-r from-oro to-magenta text-negro px-6 py-3 rounded-xl font-semibold hover:from-magenta hover:to-oro hover:text-blanco transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 text-sm"
                     >
                       <span className="relative z-10">
                         {slide.secondaryButton.text}
                       </span>
                       <div className="absolute inset-0 bg-gradient-to-r from-negro/0 via-negro/5 to-negro/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                    </Link>
+                    </button>
                   </div>
 
                   {/* Features */}
@@ -232,11 +253,11 @@ export default function Hero() {
                 <div className="relative">
                   <div className="relative">
                     <Image
-                      src={slide.image}
+                      src={processedImages[slide.id] || slide.image}
                       alt={slide.title}
                       width={400}
                       height={300}
-                      className="rounded-lg shadow-2xl border border-blanco/20 object-contain mix-blend-screen drop-shadow-2xl"
+                      className="rounded-lg object-contain"
                     />
                   </div>
                 </div>

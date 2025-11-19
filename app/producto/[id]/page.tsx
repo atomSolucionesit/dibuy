@@ -9,9 +9,8 @@ import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
 import { useProductsStore } from "@/store/products"
-import { productService } from "@/api/products/catalogo/productService"
+import { ProductService } from "@/services/productService"
 import { Product, Brand } from "@/types/api"
-import { brandService } from "@/api/products/brands/brandService"
 
 export default function ProductPage() {
   const params = useParams()
@@ -30,29 +29,18 @@ export default function ProductPage() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const productsResponse = await productService.getProductById(params.id);
-      setProducto(productsResponse);
-      //setTotalPages(productsResponse.info.meta.pages);
-      //setTotalItems(productsResponse.info.meta.total);
+      const product = await ProductService.getProductById(params.id as string);
+      setProducto(product);
     } catch (error) {
-      console.error("Error fetching products:", error);
-      window.Error("Error al cargar los productos");
+      console.error("Error fetching product:", error);
     } finally{
       setLoading(false);
     }
   };
 
   const fetchBrands = async () => {
-    try {
-      setLoading(true);
-      const brandsResponse = await brandService.getBrands();
-      setBrands(brandsResponse);
-    } catch (error) {
-      console.error("Error fetching brands:", error);
-      window.Error("Error al cargar las marcas");
-    } finally{
-      setLoading(false);
-    }
+    // Brands functionality removed for now
+    setBrands([]);
   };
 
   const fetchBrandProduct = async (idBrand: number | undefined) => {
@@ -61,10 +49,12 @@ export default function ProductPage() {
   };
 
   useEffect(() => {
-    fetchProducts()
-    fetchProduct();
-    fetchBrands();
-  }, []);
+    if (params.id) {
+      fetchProduct();
+      fetchBrands();
+      fetchProducts();
+    }
+  }, [params.id]);
 
   useEffect(() => {
   if (product && products.length > 0) {
@@ -219,7 +209,7 @@ export default function ProductPage() {
                   </div>
                   <span className="text-sm text-gray">({product.reviews} reseñas)</span>
                 </div>
-                <span className="text-sm text-gray">Marca: {brand}</span>
+                <span className="text-sm text-gray">SKU: {product.sku}</span>
               </div>
             </div>
 

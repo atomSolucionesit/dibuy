@@ -155,7 +155,7 @@ export default function ProductsPage() {
                       </button>
                     </li>
                   );
-                })
+                })}
               </ul>
             </div>
             {/* Filtro por precio */}
