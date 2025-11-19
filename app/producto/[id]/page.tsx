@@ -25,6 +25,8 @@ export default function ProductPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [brand, setBrand] = useState<string | null>("hola");
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
+  const [isZoomed, setIsZoomed] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   const fetchProduct = async () => {
     try {
@@ -118,6 +120,13 @@ export default function ProductPage() {
     }
   }
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setMousePosition({ x, y })
+  }
+
   
 
   return (
@@ -145,7 +154,12 @@ export default function ProductPage() {
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="relative">
+            <div 
+              className="relative overflow-hidden rounded-xl bg-white cursor-zoom-in"
+              onMouseEnter={() => setIsZoomed(true)}
+              onMouseLeave={() => setIsZoomed(false)}
+              onMouseMove={handleMouseMove}
+            >
               {product.badge && (
                 <span
                   className={`absolute top-4 left-4 px-3 py-1 text-sm font-medium rounded-full z-10 ${
@@ -164,9 +178,14 @@ export default function ProductPage() {
               <Image
                 src={product.images[selectedImage].url}
                 alt={product.name}
-                width={600}
-                height={600}
-                className="w-full h-96 md:h-[500px] object-cover rounded-xl bg-white"
+                width={800}
+                height={800}
+                className={`w-full h-96 md:h-[500px] object-contain transition-transform duration-300 ${
+                  isZoomed ? 'scale-150' : 'scale-100'
+                }`}
+                style={{
+                  transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`
+                }}
               />
             </div>
 
@@ -184,7 +203,7 @@ export default function ProductPage() {
                     alt={`${product.name} ${index + 1}`}
                     width={150}
                     height={150}
-                    className="w-full h-20 object-cover bg-white"
+                    className="w-full h-20 object-contain bg-white"
                   />
                 </button>
               ))}
