@@ -42,10 +42,10 @@ export default function Hero() {
       try {
         const products = await ProductService.getOutstandingProducts(4);
         const heroSlides: HeroSlide[] = (products || []).map(
-          (product, index) => ({
+          (product: any, index: any) => ({
             id: product.id,
             title: product.name,
-            subtitle: "producto destacado",
+            subtitle: product.outstandingDescription || "Producto destacado",
             description: product.description,
             badge: product.badge || "⭐ Destacado",
             image:
@@ -61,6 +61,7 @@ export default function Hero() {
             gradient: gradients[index % gradients.length],
             price: product.sellingPrice,
             originalPrice: product.originalPrice,
+            outstandingDescription: "Al mejor precio",
           })
         );
         setSlides(heroSlides);
@@ -154,14 +155,13 @@ export default function Hero() {
             <div
               className={`absolute inset-0 bg-gradient-to-br ${slide.gradient}`}
             ></div>
-
             {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-br from-blanco/10 via-transparent to-blanco/5"></div>
             <div className="absolute top-0 right-0 w-96 h-96 bg-oro/10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-80 h-80 bg-amatista/10 rounded-full blur-3xl"></div>
 
             {/* Content */}
-            <div className="container mx-auto px-4 h-full relative z-10 flex items-center">
+            <div className="container mx-auto px-16 h-full relative z-10 flex items-center">
               <div className="grid md:grid-cols-2 gap-6 items-center w-full">
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -236,7 +236,7 @@ export default function Hero() {
                       alt={slide.title}
                       width={400}
                       height={300}
-                      className="rounded-lg shadow-2xl border border-blanco/20 object-cover"
+                      className="rounded-lg shadow-2xl border border-blanco/20 object-contain mix-blend-screen drop-shadow-2xl"
                     />
                   </div>
                 </div>

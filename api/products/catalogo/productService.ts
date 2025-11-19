@@ -5,7 +5,7 @@ import {
   ProductUploadImageResponse,
   PaginatedProductsResponse,
 } from "../../../types/api";
-import { api } from "@/api";
+import api from "@/lib/api";
 
 interface AxiosError {
   response?: {

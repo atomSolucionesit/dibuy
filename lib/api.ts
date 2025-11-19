@@ -1,14 +1,15 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 // Configuración base de la API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_CRM_BASE_URL || "http://localhost:3000/api";
 
 // Configuración por defecto de axios
 const defaultConfig: AxiosRequestConfig = {
   baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 };
 
@@ -19,8 +20,8 @@ const apiClient: AxiosInstance = axios.create(defaultConfig);
 apiClient.interceptors.request.use(
   (config) => {
     // Obtener token del localStorage (si existe)
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken');
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -41,12 +42,12 @@ apiClient.interceptors.response.use(
     // Manejo de errores global
     if (error.response?.status === 401) {
       // Token expirado o inválido
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-        window.location.href = '/login';
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("authToken");
+        window.location.href = "/login";
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

@@ -1,6 +1,5 @@
+import api from "@/lib/api";
 import { Brand } from "../../../types/api";
-import { api } from "@/api";
-
 export const getBrands = async (): Promise<Brand[]> => {
   try {
     const response = await api.get("/brand");

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          companyToken: process.env.NEXT_COMPANY_TOKEN,
+          companyToken: process.env.NEXT_PUBLIC_COMPANY_TOKEN,
         }),
       }
     );

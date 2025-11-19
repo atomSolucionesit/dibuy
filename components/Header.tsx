@@ -7,12 +7,15 @@ import Link from "next/link";
 import { Search, ShoppingCart, Menu, X, User, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { motion } from "framer-motion";
-import { ProductService } from "@/services/productService";
+import { useCategoryStore } from "@/store/categories";
 import { Category } from "@/types/api";
+import SearchModal from "@/components/SearchModal";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const { categories: allCategories } = useCategoryStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const { state } = useCart();
@@ -28,16 +31,8 @@ export default function Header() {
   ];
 
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const categoriesData = await ProductService.getCategories();
-        setCategories(categoriesData.slice(0, 6));
-      } catch (error) {
-        console.error('Error loading categories:', error);
-      }
-    };
-    loadCategories();
-  }, []);
+    setCategories(allCategories.slice(0, 6));
+  }, [allCategories]);
 
   const nextCategories = () => {
     if (categories.length > 6) {
@@ -100,9 +95,14 @@ export default function Header() {
                 <input
                   type="text"
                   placeholder="Buscar productos tecnológicos..."
-                  className="input-primary w-full pr-12 py-2 bg-gray-200 text-gray-800"
+                  className="input-primary w-full pr-12 py-2 bg-gray-200 text-white cursor-pointer"
+                  onClick={() => setIsSearchModalOpen(true)}
+                  readOnly
                 />
-                <button className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-magenta transition-colors">
+                <button 
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-magenta transition-colors"
+                  onClick={() => setIsSearchModalOpen(true)}
+                >
                   <Search className="h-4 w-4" />
                 </button>
               </div>
@@ -114,7 +114,7 @@ export default function Header() {
             {/* Search icon - Mobile */}
             <button
               className="md:hidden hover:text-magenta transition-colors"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              onClick={() => setIsSearchModalOpen(true)}
             >
               <Search className="h-5 w-5" />
             </button>
@@ -155,21 +155,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile search */}
-        {isSearchOpen && (
-          <div className="md:hidden pb-2">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar productos..."
-                className="input-primary w-full pr-12 py-2"
-              />
-              <button className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-magenta transition-colors">
-                <Search className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
+
 
         {/* Navigation */}
         {!isCartPage && (
@@ -244,6 +230,11 @@ export default function Header() {
           </nav>
         )}
       </div>
+      
+      <SearchModal 
+        isOpen={isSearchModalOpen} 
+        onClose={() => setIsSearchModalOpen(false)} 
+      />
     </header>
   );
 }

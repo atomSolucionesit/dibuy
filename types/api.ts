@@ -21,6 +21,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
+  brand: string;
   price: number;
   sellingPrice: number;
   originalPrice?: number;
@@ -35,6 +36,7 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   badge: string;
+  outstandingDescription?: string;
   CategoryProduct: Category[];
 }
 

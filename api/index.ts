@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const URLAPI = process.env.NEXT_PUBLIC_API_URL;
+export const URLAPI = process.env.NEXT_PUBLIC_CRM_BASE_URL;
 export const token = process.env.NEXT_PUBLIC_COMPANY_TOKEN;
 
 // Función para obtener token CRM con sessionStorage
@@ -16,8 +16,6 @@ const getCRMToken = async (): Promise<string | null> => {
   }
 
   try {
-    console.log('Fetching token from:', `${URLAPI}/auth/ecommerce/login`);
-    console.log('Company token:', token);
     
     const response = await fetch(`${URLAPI}/auth/ecommerce/login`, {
       method: "POST",
@@ -27,11 +25,9 @@ const getCRMToken = async (): Promise<string | null> => {
       })
     });
 
-    console.log('Auth response status:', response.status);
     
     if (response.ok) {
       const data = await response.json();
-      console.log('Auth response:', data);
       
       // Extraer token de la respuesta (puede estar en diferentes campos)
       const token = data.access_token || data.token || data.info?.token || data.info?.access_token;
@@ -65,11 +61,8 @@ export const api = axios.create({
 
 api.interceptors.request.use(async (config) => {
   const crmToken = await getCRMToken();
-  console.log('Making request to:', config.url, 'with token:', crmToken ? 'YES' : 'NO');
-  
   if (crmToken) {
     config.headers.Authorization = `Bearer ${crmToken}`;
-    console.log('Token set in headers:', crmToken.substring(0, 20) + '...');
   } else {
     console.warn('No token available for request');
   }

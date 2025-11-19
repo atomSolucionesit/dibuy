@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { Category } from "@/types/api"
-import { categoryService } from "@/api/products/categories/categoryService"
+import { ProductService } from "@/services/productService"
 
 type CategoryState = {
   categories: Category[]
@@ -15,8 +15,8 @@ export const useCategoryStore = create<CategoryState>((set) => ({
   fetchCategories: async () => {
     set({ isLoading: true })
     try {
-      const response = await categoryService.getCategories()
-      set({ categories: response.info.data })
+      const categories = await ProductService.getCategories()
+      set({ categories: categories || [] })
     } catch (error) {
       console.error("Error fetching categories:", error)
     } finally {

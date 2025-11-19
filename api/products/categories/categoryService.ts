@@ -1,13 +1,9 @@
-import {
-  Category,
-  PaginatedCategoriesResponse,
-} from "../../../types/api";
-import { api } from "@/api";
+import api from "@/lib/api";
+import { Category, PaginatedCategoriesResponse } from "../../../types/api";
 
 export const getCategories = async (): Promise<PaginatedCategoriesResponse> => {
   try {
-    const response = await api.get("/category", {
-    });
+    const response = await api.get("/category", {});
     return response.data;
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -28,4 +24,4 @@ export const getCategoryById = async (id: string): Promise<Category> => {
 export const categoryService = {
   getCategories,
   getCategoryById,
-}
+};

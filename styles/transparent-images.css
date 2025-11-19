@@ -1,0 +1,50 @@
+/* Estilos para imágenes con fondo transparente */
+
+.transparent-bg {
+  mix-blend-mode: multiply;
+}
+
+.transparent-bg-screen {
+  mix-blend-mode: screen;
+}
+
+.transparent-bg-overlay {
+  mix-blend-mode: overlay;
+}
+
+.transparent-bg-darken {
+  mix-blend-mode: darken;
+}
+
+.transparent-bg-lighten {
+  mix-blend-mode: lighten;
+}
+
+/* Para imágenes PNG con transparencia */
+.preserve-transparency {
+  background: transparent;
+  mix-blend-mode: normal;
+}
+
+/* Filtro CSS para remover fondos blancos */
+.remove-white-bg {
+  filter: 
+    contrast(1.2) 
+    brightness(1.1) 
+    drop-shadow(0 25px 25px rgb(0 0 0 / 0.15));
+  mix-blend-mode: multiply;
+}
+
+/* Para productos con fondos específicos */
+.product-image {
+  background: transparent;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
+}
+
+.product-image.white-bg-remove {
+  mix-blend-mode: multiply;
+}
+
+.product-image.dark-bg-remove {
+  mix-blend-mode: screen;
+}

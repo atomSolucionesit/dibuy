@@ -1,7 +1,7 @@
 // Configuración para la integración con Nexus CRM
 export const NEXUS_CONFIG = {
   // URL base del backend de Nexus
-  API_URL: process.env.NEXT_PUBLIC_NEXUS_API_URL || 'http://localhost:3001/api',
+  API_URL: process.env.NEXT_PUBLIC_CRM_BASE_URL || 'http://localhost:3001/api',
   
   // Configuración de pagos
   PAYMENT: {
