@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,7 +11,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useProductsStore } from "@/store/products";
 import { useCategoryStore } from "@/store/categories";
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const { addItem } = useCart();
   const { products, isLoading, fetchProducts } = useProductsStore();
   const { categories, fetchCategories } = useCategoryStore();
@@ -444,5 +444,13 @@ export default function ProductsPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-magenta"></div></div>}>
+      <ProductsPageContent />
+    </Suspense>
   );
 }
