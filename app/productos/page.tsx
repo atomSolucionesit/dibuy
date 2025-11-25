@@ -13,7 +13,7 @@ import { useCategoryStore } from "@/store/categories";
 
 function ProductsPageContent() {
   const { addItem } = useCart();
-  const { products, isLoading, fetchProducts } = useProductsStore();
+  const { products, isLoading, meta, fetchProducts } = useProductsStore();
   const { categories, fetchCategories } = useCategoryStore();
   const searchParams = useSearchParams();
 
@@ -21,7 +21,11 @@ function ProductsPageContent() {
   const [sortBy, setSortBy] = useState("featured");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const itemsPerPage = 12;
 
   const sortOptions = [
     { id: "featured", name: "Destacados" },
@@ -38,17 +42,20 @@ function ProductsPageContent() {
     const categoryFromUrl = searchParams.get('categoria');
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
-      fetchProducts(1, 20, categoryFromUrl);
+      fetchProducts(1, itemsPerPage, categoryFromUrl);
     } else {
       setSelectedCategory('all');
-      fetchProducts(1, 20);
+      fetchProducts(1, itemsPerPage);
     }
   }, [fetchProducts, fetchCategories, searchParams]);
 
   useEffect(() => {
-    console.log("Productos actualizados:", products);
-    console.log("Categorias: ", categories);
-  }, [products]);
+    if (meta) {
+      setTotalPages(meta.pages);
+      setTotalProducts(meta.total);
+      setCurrentPage(meta.page);
+    }
+  }, [meta]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -122,7 +129,8 @@ function ProductsPageContent() {
                   <button
                     onClick={() => {
                       setSelectedCategory("all");
-                      fetchProducts(1, 20);
+                      setCurrentPage(1);
+                      fetchProducts(1, itemsPerPage);
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                       selectedCategory === "all"
@@ -141,7 +149,8 @@ function ProductsPageContent() {
                       <button
                         onClick={() => {
                           setSelectedCategory(category.id);
-                          fetchProducts(1, 20, category.id);
+                          setCurrentPage(1);
+                          fetchProducts(1, itemsPerPage, category.id);
                         }}
                         className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                           selectedCategory === category.id
@@ -172,7 +181,7 @@ function ProductsPageContent() {
                 <input
                   type="range"
                   min={0}
-                  max={1000000}
+                  max={10000000}
                   step={500}
                   value={priceRange[0]}
                   onChange={(e) =>
@@ -182,10 +191,10 @@ function ProductsPageContent() {
                   style={{
                     background: `linear-gradient(
                       to right,
-                      #d1d5db ${(priceRange[0] / 1000000) * 100}%,
-                      #e6007e ${(priceRange[0] / 1000000) * 100}%,
-                      #e6007e ${(priceRange[1] / 1000000) * 100}%,
-                      #d1d5db ${(priceRange[1] / 1000000) * 100}%
+                      #d1d5db ${(priceRange[0] / 10000000) * 100}%,
+                      #e6007e ${(priceRange[0] / 10000000) * 100}%,
+                      #e6007e ${(priceRange[1] / 10000000) * 100}%,
+                      #d1d5db ${(priceRange[1] / 10000000) * 100}%
                     )`,
                     height: "6px",
                     borderRadius: "9999px",
@@ -195,7 +204,7 @@ function ProductsPageContent() {
                 <input
                   type="range"
                   min={0}
-                  max={1000000}
+                  max={10000000}
                   step={500}
                   value={priceRange[1]}
                   onChange={(e) =>
@@ -224,7 +233,7 @@ function ProductsPageContent() {
                     Filtros
                   </button>
                   <span className="text-gray-600">
-                    {sortedProducts.length} productos encontrados
+                    {totalProducts} productos encontrados
                   </span>
                 </div>
 
@@ -419,6 +428,55 @@ function ProductsPageContent() {
               </div>
             )}
             
+            {/* Pagination */}
+            {!isLoading && totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button
+                  onClick={() => {
+                    const newPage = currentPage - 1;
+                    setCurrentPage(newPage);
+                    fetchProducts(newPage, itemsPerPage, selectedCategory === 'all' ? undefined : selectedCategory);
+                  }}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-magenta hover:text-blanco transition-colors"
+                >
+                  Anterior
+                </button>
+                
+                {[...Array(totalPages)].map((_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => {
+                        setCurrentPage(page);
+                        fetchProducts(page, itemsPerPage, selectedCategory === 'all' ? undefined : selectedCategory);
+                      }}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        currentPage === page
+                          ? "bg-magenta text-blanco"
+                          : "border border-gray-300 hover:bg-magenta hover:text-blanco"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                
+                <button
+                  onClick={() => {
+                    const newPage = currentPage + 1;
+                    setCurrentPage(newPage);
+                    fetchProducts(newPage, itemsPerPage, selectedCategory === 'all' ? undefined : selectedCategory);
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-magenta hover:text-blanco transition-colors"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
+            
             {/* Empty State */}
             {!isLoading && sortedProducts.length === 0 && (
               <div className="text-center py-16">
@@ -430,7 +488,9 @@ function ProductsPageContent() {
                 <button
                   onClick={() => {
                     setSelectedCategory("all");
-                    setPriceRange([0, 1000000]);
+                    setPriceRange([0, 10000000]);
+                    setCurrentPage(1);
+                    fetchProducts(1, itemsPerPage);
                   }}
                   className="bg-gradient-to-r from-magenta to-zafiro text-blanco px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
                 >

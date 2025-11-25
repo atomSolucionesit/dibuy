@@ -10,7 +10,7 @@ export const ProductService = {
     });
 
     const response = await api.get(`/products?${params}`);
-    return response.data.info?.data || response.data;
+    return response.data.info || response.data;
   },
 
   async getProductById(id: string) {
