@@ -3,31 +3,31 @@ import { Truck, Shield, CreditCard, Headphones } from "lucide-react"
 const features = [
   {
     icon: Truck,
-    title: "Envío gratis",
-    description: "En compras superiores a $50.000",
+    title: "Envío Gratis",
+    description: "En compras superiores a $50.000 enviamos sin costo a todo el país",
     color: "magenta",
     emoji: "🚚"
   },
   {
     icon: Shield,
-    title: "Garantía extendida",
-    description: "Hasta 2 años en productos seleccionados",
+    title: "Satisfacción Garantizada",
+    description: "30 días para cambios y devoluciones. Tu satisfacción es nuestra prioridad",
     color: "zafiro",
-    emoji: "🛡️"
+    emoji: "✅"
   },
   {
     icon: CreditCard,
-    title: "Pagos seguros",
-    description: "Múltiples métodos de pago disponibles",
+    title: "Pagos Seguros",
+    description: "Procesamiento seguro con encriptación SSL y múltiples métodos de pago",
     color: "amatista",
-    emoji: "💳"
+    emoji: "🔒"
   },
   {
     icon: Headphones,
-    title: "Soporte 24/7",
-    description: "Atención al cliente especializada",
+    title: "Atención Personalizada",
+    description: "Soporte especializado por WhatsApp y email para resolver todas tus dudas",
     color: "oro",
-    emoji: "🎧"
+    emoji: "👥"
   },
 ]
 

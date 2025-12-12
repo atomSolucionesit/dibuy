@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw } from "lucide-react"
+import { Star, Heart, ShoppingCart, Minus, Plus, Truck, RotateCcw } from "lucide-react"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
@@ -215,19 +215,6 @@ export default function ProductPage() {
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
               <div className="flex items-center space-x-4 mb-4">
-                <div className="flex items-center space-x-1">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-5 w-5 ${
-                          i < Math.floor(product.rating) ? "text-yellow-400 fill-current" : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm text-gray">({product.reviews} reseñas)</span>
-                </div>
                 <span className="text-sm text-gray">SKU: {product.sku}</span>
               </div>
             </div>
@@ -287,19 +274,12 @@ export default function ProductPage() {
             </div>
 
             {/* Benefits */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t">
               <div className="flex items-center space-x-3">
                 <Truck className="h-6 w-6 text-primary" />
                 <div>
                   <p className="font-medium text-sm">Envío gratis</p>
                   <p className="text-xs text-gray">En compras +$50.000</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Shield className="h-6 w-6 text-primary" />
-                <div>
-                  <p className="font-medium text-sm">Garantía</p>
-                  <p className="text-xs text-gray">12 meses oficial</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
@@ -344,7 +324,7 @@ export default function ProductPage() {
                       alt={relatedProduct.name}
                       width={300}
                       height={300}
-                      className="w-full h-48 object-cover rounded-lg mb-4"
+                      className="w-full h-48 object-contain rounded-lg mb-4"
                     />
                     <h3 className="font-semibold mb-2 hover:text-primary transition-colors">{relatedProduct.name}</h3>
                     <p className="text-primary font-bold">{formatPrice(relatedProduct.sellingPrice)}</p>

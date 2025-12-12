@@ -51,7 +51,7 @@ export default function Categories() {
   };
 
   return (
-    <section className="py-12 md:py-20 bg-gradient-to-br from-blanco to-gray-50">
+    <section className="py-12 md:py-20 bg-gradient-to-b from-zafiro/60 to-magenta/25">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <span className="badge-zafiro mb-4 inline-block">🏷️ Categorías</span>
@@ -111,9 +111,7 @@ export default function Categories() {
                     {category.name}
                   </h3>
                   <p className="text-xs md:text-sm text-gray-600">
-                    {category.productCount
-                      ? `${category.productCount} productos`
-                      : "Ver productos"}
+                    Ver productos
                   </p>
                 </Link>
               );

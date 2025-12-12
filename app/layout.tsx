@@ -6,6 +6,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { CartProvider } from "@/contexts/CartContext";
+import { HeroProvider } from "@/contexts/HeroContext";
 import Script from "next/script";
 
 const companyId = process.env.NEXT_PUBLIC_PAYWAY_COMPANY_ID
@@ -58,8 +59,10 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <CartProvider>
-                {children}
-                <Toaster />
+                <HeroProvider>
+                  {children}
+                  <Toaster />
+                </HeroProvider>
               </CartProvider>
             </AuthProvider>
           </QueryProvider>

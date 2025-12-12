@@ -9,7 +9,6 @@ const getCRMToken = async (): Promise<string | null> => {
   if (typeof window !== 'undefined') {
     const storedToken = sessionStorage.getItem('crm_token');
     const tokenExpiry = sessionStorage.getItem('crm_token_expiry');
-    
     if (storedToken && tokenExpiry && Date.now() < parseInt(tokenExpiry)) {
       return storedToken;
     }

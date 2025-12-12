@@ -4,12 +4,22 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, ShoppingCart, Menu, X, User, Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  ShoppingCart,
+  Menu,
+  X,
+  User,
+  Heart,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { motion } from "framer-motion";
 import { useCategoryStore } from "@/store/categories";
 import { Category } from "@/types/api";
 import SearchModal from "@/components/SearchModal";
+import { useHero } from "@/contexts/HeroContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,6 +30,37 @@ export default function Header() {
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const { state } = useCart();
   const pathname = usePathname();
+  const { currentGradient } = useHero();
+
+  const getBannerColors = () => {
+    if (currentGradient.includes("magenta")) {
+      return {
+        bg: "bg-gradient-to-r from-magenta/50 to-zafiro/50",
+        text: "text-blanco",
+      };
+    } else if (currentGradient.includes("zafiro")) {
+      return {
+        bg: "bg-gradient-to-r from-zafiro/50 to-amatista/50",
+        text: "text-blanco",
+      };
+    } else if (currentGradient.includes("amatista")) {
+      return {
+        bg: "bg-gradient-to-r from-amatista/50 to-oro/50",
+        text: "text-negro",
+      };
+    } else if (currentGradient.includes("oro")) {
+      return {
+        bg: "bg-gradient-to-r from-oro/50 to-magenta/50",
+        text: "text-negro",
+      };
+    }
+    return {
+      bg: "bg-gradient-to-r from-magenta/50 to-zafiro/50",
+      text: "text-blanco",
+    };
+  };
+
+  const bannerColors = getBannerColors();
 
   const isCartPage = pathname === "/carrito" || pathname === "/checkout";
 
@@ -36,7 +77,7 @@ export default function Header() {
 
   const nextCategories = () => {
     if (categories.length > 6) {
-      setCurrentCategoryIndex((prev) => 
+      setCurrentCategoryIndex((prev) =>
         prev + 6 >= categories.length ? 0 : prev + 6
       );
     }
@@ -44,30 +85,38 @@ export default function Header() {
 
   const prevCategories = () => {
     if (categories.length > 6) {
-      setCurrentCategoryIndex((prev) => 
+      setCurrentCategoryIndex((prev) =>
         prev - 6 < 0 ? Math.max(0, categories.length - 6) : prev - 6
       );
     }
   };
 
-  const visibleCategories = categories.slice(currentCategoryIndex, currentCategoryIndex + 6);
+  const visibleCategories = categories.slice(
+    currentCategoryIndex,
+    currentCategoryIndex + 6
+  );
 
   return (
     <header className="bg-blanco shadow-sm sticky top-0 z-50 border-b border-gray-100">
       {/* Top bar - Hidden on mobile */}
       {!isCartPage && (
-        <div className="w-full overflow-hidden">
+        <div
+          className={`w-full overflow-hidden transition-all duration-500 ${bannerColors.bg}`}
+        >
           <motion.div
-            className="flex whitespace-nowrap"
+            className="flex whitespace-nowrap py-2"
             animate={{ x: ["0%", "-100%"] }}
             transition={{
               repeat: Infinity,
-              duration: 20, // velocidad
+              duration: 20,
               ease: "linear",
             }}
           >
             {[...messages, ...messages].map((msg, index) => (
-              <span key={index} className="mx-8 text-sm text-black">
+              <span
+                key={index}
+                className={`mx-8 text-sm font-medium ${bannerColors.text}`}
+              >
                 {msg}
               </span>
             ))}
@@ -99,7 +148,7 @@ export default function Header() {
                   onClick={() => setIsSearchModalOpen(true)}
                   readOnly
                 />
-                <button 
+                <button
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-magenta transition-colors"
                   onClick={() => setIsSearchModalOpen(true)}
                 >
@@ -155,8 +204,6 @@ export default function Header() {
           </div>
         </div>
 
-
-
         {/* Navigation */}
         {!isCartPage && (
           <nav
@@ -174,12 +221,14 @@ export default function Header() {
                   <ChevronLeft className="h-4 w-4" />
                 </button>
               )}
-              
+
               <ul className="flex space-x-6">
                 {visibleCategories.map((category) => (
                   <li key={category.id}>
                     <Link
-                      href={`/categoria/${category.slug || category.name.toLowerCase()}`}
+                      href={`/categoria/${
+                        category.slug || category.name.toLowerCase()
+                      }`}
                       className="nav-link text-sm whitespace-nowrap"
                     >
                       {category.name}
@@ -195,7 +244,7 @@ export default function Header() {
                   </Link>
                 </li>
               </ul>
-              
+
               {categories.length > 6 && (
                 <button
                   onClick={nextCategories}
@@ -211,7 +260,9 @@ export default function Header() {
               {categories.map((category) => (
                 <li key={category.id}>
                   <Link
-                    href={`/categoria/${category.slug || category.name.toLowerCase()}`}
+                    href={`/categoria/${
+                      category.slug || category.name.toLowerCase()
+                    }`}
                     className="nav-link block py-1 text-sm"
                   >
                     {category.name}
@@ -230,10 +281,10 @@ export default function Header() {
           </nav>
         )}
       </div>
-      
-      <SearchModal 
-        isOpen={isSearchModalOpen} 
-        onClose={() => setIsSearchModalOpen(false)} 
+
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
       />
     </header>
   );

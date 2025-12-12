@@ -8,20 +8,20 @@ import Footer from "@/components/Footer"
 const contactInfo = [
   {
     icon: Phone,
-    title: "Teléfono",
-    content: "+54 11 1234-5678",
+    title: "WhatsApp",
+    content: "1154707982",
     description: "Lun a Vie 9:00 - 18:00"
   },
   {
     icon: Mail,
     title: "Email",
-    content: "info@dibuy.com",
+    content: "administracion@comex-consultores.com.ar",
     description: "Respondemos en 24h"
   },
   {
     icon: MapPin,
     title: "Dirección",
-    content: "Av. Corrientes 1234",
+    content: "Avenida Libertador 5990, oficina 505",
     description: "Buenos Aires, Argentina"
   },
   {
@@ -55,17 +55,47 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     subject: "",
     message: ""
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Simular envío del formulario
-    setIsSubmitted(true)
-    setTimeout(() => setIsSubmitted(false), 3000)
-    setFormData({ name: "", email: "", subject: "", message: "" })
+    setIsLoading(true)
+    
+    try {
+      const response = await fetch('/api/email/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          service: formData.subject,
+          message: formData.message
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        setIsSubmitted(true)
+        setTimeout(() => setIsSubmitted(false), 3000)
+        setFormData({ name: "", email: "", phone: "", subject: "", message: "" })
+      } else {
+        alert('Error al enviar el mensaje. Inténtalo de nuevo.')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error de conexión. Inténtalo de nuevo.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -105,7 +135,7 @@ export default function ContactPage() {
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white text-gray-900"
                       />
                     </div>
                     <div>
@@ -115,9 +145,21 @@ export default function ContactPage() {
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white text-gray-900"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Teléfono</label>
+                    <input
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white text-gray-900"
+                      placeholder="Ej: 1154707982"
+                    />
                   </div>
 
                   <div>
@@ -126,7 +168,7 @@ export default function ContactPage() {
                       required
                       value={formData.subject}
                       onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white text-gray-900"
                     >
                       <option value="">Selecciona un asunto</option>
                       <option value="consulta">Consulta general</option>
@@ -144,18 +186,19 @@ export default function ContactPage() {
                       rows={6}
                       value={formData.message}
                       onChange={(e) => setFormData({...formData, message: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary resize-none"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary resize-none bg-white text-gray-900"
                       placeholder="Cuéntanos cómo podemos ayudarte..."
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="group relative overflow-hidden w-full bg-gradient-primary text-white px-6 py-4 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
+                    disabled={isLoading}
+                    className="group relative overflow-hidden w-full bg-gradient-primary text-white px-6 py-4 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="relative z-10 flex items-center space-x-2">
                       <Send className="h-5 w-5" />
-                      <span>Enviar mensaje</span>
+                      <span>{isLoading ? 'Enviando...' : 'Enviar mensaje'}</span>
                     </span>
                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   </button>
@@ -197,15 +240,19 @@ export default function ContactPage() {
               ))}
             </div>
 
-            {/* Map Placeholder */}
+            {/* Map */}
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h3 className="font-semibold mb-4">Ubicación</h3>
-              <div className="bg-gray-200 rounded-lg h-64 flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Mapa interactivo</p>
-                  <p className="text-sm text-gray-400">Av. Corrientes 1234, Buenos Aires</p>
-                </div>
+              <div className="rounded-lg overflow-hidden">
+                <iframe 
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d205.36673456393893!2d-58.447804077711794!3d-34.556903643195604!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb57505626901%3A0x1c332e88a3fb7919!2sDibuy!5e0!3m2!1ses!2sar!4v1765551594907!5m2!1ses!2sar" 
+                  width="100%" 
+                  height="300" 
+                  style={{border:0}} 
+                  allowFullScreen 
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
             </div>
 
@@ -225,25 +272,6 @@ export default function ContactPage() {
                   <span>Domingos</span>
                   <span className="font-medium text-gray-500">Cerrado</span>
                 </div>
-              </div>
-            </div>
-
-            {/* Social Media */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="font-semibold mb-4">Síguenos</h3>
-              <div className="flex space-x-4">
-                <button className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white hover:opacity-90 transition-opacity">
-                  <span className="text-sm font-bold">f</span>
-                </button>
-                <button className="w-10 h-10 bg-pink-600 rounded-lg flex items-center justify-center text-white hover:opacity-90 transition-opacity">
-                  <span className="text-sm font-bold">ig</span>
-                </button>
-                <button className="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center text-white hover:opacity-90 transition-opacity">
-                  <span className="text-sm font-bold">in</span>
-                </button>
-                <button className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white hover:opacity-90 transition-opacity">
-                  <span className="text-sm font-bold">yt</span>
-                </button>
               </div>
             </div>
           </div>

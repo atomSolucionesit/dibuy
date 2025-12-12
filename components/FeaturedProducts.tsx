@@ -45,7 +45,7 @@ export default function FeaturedProducts() {
   }
 
   return (
-    <section className="py-12 md:py-20 bg-gradient-to-br from-blanco to-gray-50">
+    <section className="py-12 md:py-20 bg-gradient-to-b from-magenta/25 to-zafiro/15">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <span className="badge-magenta mb-4 inline-block">⭐ Productos destacados</span>
@@ -77,11 +77,11 @@ export default function FeaturedProducts() {
                 </button>
                 <Link href={`/producto/${product.id}`}>
                   <Image
-                    src={product.images[0].url || "/placeholder.svg"}
+                    src={product?.images[0]?.url || "/placeholder.svg"}
                     alt={product.name}
                     width={300}
                     height={300}
-                    className="w-full h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-48 object-contain rounded-lg group-hover:scale-105 transition-transform duration-300"
                   />
                 </Link>
               </div>
@@ -91,19 +91,7 @@ export default function FeaturedProducts() {
                   <h3 className="font-semibold hover:text-magenta transition-colors text-negro">{product.name}</h3>
                 </Link>
 
-                <div className="flex items-center space-x-1">
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < Math.floor(product.rating) ? "text-oro fill-current" : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm text-gray-600">({product.reviews})</span>
-                </div>
+
 
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">

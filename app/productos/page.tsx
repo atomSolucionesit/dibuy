@@ -31,7 +31,6 @@ function ProductsPageContent() {
     { id: "featured", name: "Destacados" },
     { id: "price-low", name: "Precio: Menor a Mayor" },
     { id: "price-high", name: "Precio: Mayor a Menor" },
-    { id: "rating", name: "Mejor Valorados" },
     { id: "newest", name: "Más Nuevos" },
   ];
 
@@ -79,8 +78,6 @@ function ProductsPageContent() {
         return a.sellingPrice - b.sellingPrice;
       case "price-high":
         return b.sellingPrice - a.sellingPrice;
-      case "rating":
-        return b.rating - a.rating;
       case "newest":
         return b.id - a.id;
       default:
@@ -339,7 +336,7 @@ function ProductsPageContent() {
                           alt={product.name}
                           width={400}
                           height={400}
-                          className={`w-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500 ${
+                          className={`w-full object-contain group-hover:scale-110 transition-transform duration-500 ${
                             viewMode === "list" ? "h-24 md:h-32" : "h-40 md:h-48 lg:h-56"
                           }`}
                         />
@@ -362,23 +359,7 @@ function ProductsPageContent() {
                         </h3>
                       </Link>
 
-                      <div className="flex items-center space-x-1">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3 w-3 md:h-4 md:w-4 ${
-                                i < Math.floor(product.rating || 0)
-                                  ? "text-oro fill-current"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs md:text-sm text-gray-600">
-                          ({product.reviews || 0})
-                        </span>
-                      </div>
+
 
                       {viewMode === "list" && (
                         <p className="text-gray-600 text-sm md:text-base line-clamp-2">

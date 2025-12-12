@@ -8,6 +8,7 @@ import { ProductService } from "@/services/productService";
 import { Product } from "@/types/api";
 import { useCart } from "@/contexts/CartContext";
 import { getProcessedImage } from "@/lib/imageUtils";
+import { useHero } from "@/contexts/HeroContext";
 
 interface HeroSlide {
   id: string;
@@ -33,13 +34,14 @@ const gradients = [
 
 export default function Hero() {
   const { addItem } = useCart();
+  const { setCurrentSlide: setContextSlide, setCurrentGradient } = useHero();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processedImages, setProcessedImages] = useState<{[key: string]: string}>({});
+
 
   // Cargar productos destacados
   useEffect(() => {
@@ -51,12 +53,17 @@ export default function Hero() {
             const originalImage = product.images[0]?.url || "/placeholder.svg?height=400&width=500";
             let processedImage = originalImage;
             
-            // Procesar imagen para remover fondo
-            try {
-              processedImage = await getProcessedImage(originalImage);
-              setProcessedImages(prev => ({...prev, [product.id]: processedImage}));
-            } catch (error) {
-              console.log('Using original image for:', product.name);
+            // Procesar imagen para remover fondo solo si es una URL válida
+            if (originalImage && !originalImage.includes('placeholder.svg') && originalImage.startsWith('http')) {
+              try {
+                console.log('Processing image for product:', product.name, 'URL:', originalImage);
+                processedImage = await getProcessedImage(originalImage);
+                console.log('Successfully processed image for:', product.name);
+              } catch (error) {
+                console.error('Failed to process image for:', product.name, error);
+              }
+            } else {
+              console.log('Skipping image processing for:', product.name, '- Invalid URL:', originalImage);
             }
             
             return {
@@ -124,20 +131,34 @@ export default function Hero() {
       return;
     setIsTransitioning(true);
     setCurrentSlide(index);
+    setContextSlide(index);
+    if (slides[index]) {
+      setCurrentGradient(slides[index].gradient);
+    }
     setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const nextSlide = () => {
     if (isTransitioning || slides.length === 0) return;
     setIsTransitioning(true);
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
+    const nextIndex = (currentSlide + 1) % slides.length;
+    setCurrentSlide(nextIndex);
+    setContextSlide(nextIndex);
+    if (slides[nextIndex]) {
+      setCurrentGradient(slides[nextIndex].gradient);
+    }
     setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const prevSlide = () => {
     if (isTransitioning || slides.length === 0) return;
     setIsTransitioning(true);
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    const prevIndex = (currentSlide - 1 + slides.length) % slides.length;
+    setCurrentSlide(prevIndex);
+    setContextSlide(prevIndex);
+    if (slides[prevIndex]) {
+      setCurrentGradient(slides[prevIndex].gradient);
+    }
     setTimeout(() => setIsTransitioning(false), 500);
   };
 
@@ -253,7 +274,7 @@ export default function Hero() {
                 <div className="relative">
                   <div className="relative">
                     <Image
-                      src={processedImages[slide.id] || slide.image}
+                      src={slide.image}
                       alt={slide.title}
                       width={400}
                       height={300}
