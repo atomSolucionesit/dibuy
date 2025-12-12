@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from "lucide-react"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import { ContactService } from "@/services/contactService"
 
 const contactInfo = [
   {
@@ -66,22 +67,15 @@ export default function ContactPage() {
     e.preventDefault()
     setIsLoading(true)
     
+    
     try {
-      const response = await fetch('/api/email/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          service: formData.subject,
-          message: formData.message
-        })
+      const result = await ContactService.sendContactForm({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        service: formData.subject,
+        message: formData.message
       })
-
-      const result = await response.json()
       
       if (result.success) {
         setIsSubmitted(true)
