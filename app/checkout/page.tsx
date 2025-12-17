@@ -71,6 +71,7 @@ const handleCreateSale = async (e: React.FormEvent) => {
       subTotal: subtotal,
       taxAmount: 0,
       status: "PENDING",
+      origin: "TIENDA",
       receiptTypeId: 1,
       documentTypeId: 1,
       currencyId: 1,
@@ -129,7 +130,7 @@ const handleProcessPayment = async (e: React.FormEvent) => {
 
       // 3. Actualizar venta en backend
       if (payment.data?.status === "approved") {
-        await updateSale(saleId, { status: "COMPLETED" })
+        //await updateSale(saleId, { status: "COMPLETED" })
         clearCart();
         router.push("/payment/success");
       } else {
