@@ -7,8 +7,9 @@ import { Minus, Plus, Trash2, CreditCard, Truck, Shield, RotateCcw, CheckCircle 
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
-import { createSale, updateSale } from "@/api/sales/saleService"
+import { createSale, updateSale } from "@/services/saleService"
 import { createToken, createPayment, getPaymentStatus } from "@/services/payments"
+import { AuthService } from "@/services/authService"
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
