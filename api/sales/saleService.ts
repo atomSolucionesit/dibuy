@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import { api } from "..";
 
 export const createSale = async (saleData: any): Promise<any> => {
   try {

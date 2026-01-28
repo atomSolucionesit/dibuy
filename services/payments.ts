@@ -44,14 +44,16 @@ export const createPayment = async (
   token: string,
   amount: number,
   saleId: string | null,
-  deviceFingerprintId: string | null
+  deviceFingerprintId: string | null,
+  paymentMethodId?: number
 ) => {
   try {
     const res = await api.post("/payway/payment", {
       token,
       amount,
       saleId,
-      deviceFingerprintId
+      deviceFingerprintId,
+      paymentMethodId
     });
     return res.data;
   } catch (error) {

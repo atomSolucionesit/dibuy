@@ -42,7 +42,6 @@ export default function Hero() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-
   // Cargar productos destacados
   useEffect(() => {
     const loadOutstandingProducts = async () => {
@@ -50,22 +49,34 @@ export default function Hero() {
         const products = await ProductService.getOutstandingProducts(4);
         const heroSlides: HeroSlide[] = await Promise.all(
           (products || []).map(async (product: any, index: any) => {
-            const originalImage = product.images[0]?.url || "/placeholder.svg?height=400&width=500";
+            const originalImage =
+              product.images[0]?.url || "/placeholder.svg?height=400&width=500";
             let processedImage = originalImage;
-            
+
             // Procesar imagen para remover fondo solo si es una URL válida
-            if (originalImage && !originalImage.includes('placeholder.svg') && originalImage.startsWith('http')) {
+            if (
+              originalImage &&
+              !originalImage.includes("placeholder.svg") &&
+              originalImage.startsWith("http")
+            ) {
               try {
-                console.log('Processing image for product:', product.name, 'URL:', originalImage);
                 processedImage = await getProcessedImage(originalImage);
-                console.log('Successfully processed image for:', product.name);
               } catch (error) {
-                console.error('Failed to process image for:', product.name, error);
+                console.error(
+                  "Failed to process image for:",
+                  product.name,
+                  error,
+                );
               }
             } else {
-              console.log('Skipping image processing for:', product.name, '- Invalid URL:', originalImage);
+              console.log(
+                "Skipping image processing for:",
+                product.name,
+                "- Invalid URL:",
+                originalImage,
+              );
             }
-            
+
             return {
               id: product.id,
               title: product.name,
@@ -86,7 +97,7 @@ export default function Hero() {
               originalPrice: product.originalPrice,
               outstandingDescription: "Al mejor precio",
             };
-          })
+          }),
         );
         setSlides(heroSlides);
         setProducts(products || []);
@@ -242,7 +253,7 @@ export default function Hero() {
                     </Link>
                     <button
                       onClick={() => {
-                        const product = products.find(p => p.id === slide.id);
+                        const product = products.find((p) => p.id === slide.id);
                         if (product) addItem(product);
                       }}
                       className="group relative overflow-hidden bg-gradient-to-r from-oro to-magenta text-negro px-6 py-3 rounded-xl font-semibold hover:from-magenta hover:to-oro hover:text-blanco transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 text-sm"

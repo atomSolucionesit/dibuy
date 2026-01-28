@@ -114,7 +114,7 @@ export default function CartPage() {
                 {state.items.map((item) => (
                   <div key={item.id} className="flex gap-4 p-4 border border-gray-200 rounded-lg">
                     <Image
-                      src={item.images[0].url || "/placeholder.svg"}
+                      src={item.images?.[0]?.url || "/placeholder.svg"}
                       alt={item.name}
                       width={100}
                       height={100}
