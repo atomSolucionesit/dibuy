@@ -23,14 +23,20 @@ export default function CategoryPage() {
     const loadCategoryProducts = async () => {
       try {
         setLoading(true);
-        const response = await ProductService.getProductsByCategory(slug);
-        setProducts(response.data || []);
-        setCategoryName(
-          decodeURIComponent(slug).replace(/-/g, " ").toUpperCase(),
-        );
+        const [productsResponse, categoriesResponse] = await Promise.all([
+          ProductService.getProductsByCategory(slug),
+          ProductService.getCategories()
+        ]);
+        
+        setProducts(productsResponse.data || []);
+        
+        // Buscar el nombre real de la categoría
+        const category = categoriesResponse?.find(cat => cat.id === slug);
+        setCategoryName(category?.name || decodeURIComponent(slug).replace(/-/g, " ").toUpperCase());
       } catch (error) {
         console.error("Error loading category products:", error);
         setProducts([]);
+        setCategoryName(decodeURIComponent(slug).replace(/-/g, " ").toUpperCase());
       } finally {
         setLoading(false);
       }

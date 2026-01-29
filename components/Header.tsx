@@ -28,7 +28,7 @@ export default function Header() {
   const { state } = useCart();
   const pathname = usePathname();
   const { currentGradient } = useHero();
-  const { fetchCategories } = useCategoryStore();
+  const { categories, fetchCategories } = useCategoryStore();
 
   // Cargar categorías al montar el componente
   useEffect(() => {
@@ -136,16 +136,7 @@ export default function Header() {
 
           {/* Right section */}
           <div className="flex items-center space-x-4">
-            {/* Categories button - Desktop */}
-            {!isCartPage && (
-              <button
-                onClick={() => setIsCategoriesModalOpen(true)}
-                className="hidden md:flex items-center space-x-2 px-4 py-2 bg-magenta text-white rounded-lg hover:bg-magenta-dark transition-colors"
-              >
-                <Grid3X3 className="h-4 w-4" />
-                <span className="text-sm font-medium">Categorías</span>
-              </button>
-            )}
+            
             {/* Search icon - Mobile */}
             <button
               className="md:hidden hover:text-magenta transition-colors"
@@ -190,14 +181,38 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation - Desktop Categories */}
+        {!isCartPage && (
+          <nav className="hidden md:block border-t border-gray-100">
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center space-x-6 overflow-x-auto">
+                {categories?.slice(0, 5).map((category) => (
+                  <Link
+                    key={category.id}
+                    href={`/categoria/${category.id}`}
+                    className="text-sm font-medium text-gray-700 hover:text-magenta transition-colors whitespace-nowrap"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+              <button
+                onClick={() => setIsCategoriesModalOpen(true)}
+                className="text-sm font-medium text-magenta hover:text-magenta-dark transition-colors"
+              >
+                Ver todo
+              </button>
+            </div>
+          </nav>
+        )}
+
+        {/* Mobile Navigation */}
         {!isCartPage && (
           <nav
             className={`${
               isMenuOpen ? "block" : "hidden"
             } md:hidden border-t border-gray-100`}
           >
-            {/* Mobile Categories Button */}
             <div className="py-2">
               <button
                 onClick={() => setIsCategoriesModalOpen(true)}
