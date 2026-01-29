@@ -59,22 +59,7 @@ export default function Hero() {
               !originalImage.includes("placeholder.svg") &&
               originalImage.startsWith("http")
             ) {
-              try {
-                processedImage = await getProcessedImage(originalImage);
-              } catch (error) {
-                console.error(
-                  "Failed to process image for:",
-                  product.name,
-                  error,
-                );
-              }
-            } else {
-              console.log(
-                "Skipping image processing for:",
-                product.name,
-                "- Invalid URL:",
-                originalImage,
-              );
+              processedImage = await getProcessedImage(originalImage);
             }
 
             return {

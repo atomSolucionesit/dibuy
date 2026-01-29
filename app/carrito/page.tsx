@@ -282,7 +282,7 @@ export default function CartPage() {
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h3 className="font-semibold mb-4">Beneficios de comprar con nosotros</h3>
               <ul className="space-y-2 text-sm text-gray">
-                <li>✓ Envío gratis en compras superiores a $50.000</li>
+                {/* <li>✓ Envío gratis en compras superiores a $50.000</li> */}
                 <li>✓ Garantía oficial de 12 meses</li>
                 <li>✓ Devolución gratuita hasta 30 días</li>
                 <li>✓ Soporte técnico especializado</li>

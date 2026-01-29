@@ -11,26 +11,29 @@ import {
   X,
   User,
   Heart,
-  ChevronLeft,
-  ChevronRight,
+  Grid3X3,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { motion } from "framer-motion";
 import { useCategoryStore } from "@/store/categories";
 import { Category } from "@/types/api";
 import SearchModal from "@/components/SearchModal";
+import CategoriesModal from "@/components/CategoriesModal";
 import { useHero } from "@/contexts/HeroContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const { categories: allCategories } = useCategoryStore();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
   const { state } = useCart();
   const pathname = usePathname();
   const { currentGradient } = useHero();
+  const { fetchCategories } = useCategoryStore();
+
+  // Cargar categorías al montar el componente
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const getBannerColors = () => {
     if (currentGradient.includes("magenta")) {
@@ -65,36 +68,9 @@ export default function Header() {
   const isCartPage = pathname === "/carrito" || pathname === "/checkout";
 
   const messages = [
-    "🚚 Envío gratis en compras superiores a $50.000",
-    "💳 15% OFF pagando con transferencia",
     "🔥 Descuentos exclusivos en laptops",
     "🎁 3 y 6 cuotas sin interés",
   ];
-
-  useEffect(() => {
-    setCategories(allCategories.slice(0, 6));
-  }, [allCategories]);
-
-  const nextCategories = () => {
-    if (categories.length > 6) {
-      setCurrentCategoryIndex((prev) =>
-        prev + 6 >= categories.length ? 0 : prev + 6
-      );
-    }
-  };
-
-  const prevCategories = () => {
-    if (categories.length > 6) {
-      setCurrentCategoryIndex((prev) =>
-        prev - 6 < 0 ? Math.max(0, categories.length - 6) : prev - 6
-      );
-    }
-  };
-
-  const visibleCategories = categories.slice(
-    currentCategoryIndex,
-    currentCategoryIndex + 6
-  );
 
   return (
     <header className="bg-blanco shadow-sm sticky top-0 z-50 border-b border-gray-100">
@@ -160,6 +136,16 @@ export default function Header() {
 
           {/* Right section */}
           <div className="flex items-center space-x-4">
+            {/* Categories button - Desktop */}
+            {!isCartPage && (
+              <button
+                onClick={() => setIsCategoriesModalOpen(true)}
+                className="hidden md:flex items-center space-x-2 px-4 py-2 bg-magenta text-white rounded-lg hover:bg-magenta-dark transition-colors"
+              >
+                <Grid3X3 className="h-4 w-4" />
+                <span className="text-sm font-medium">Categorías</span>
+              </button>
+            )}
             {/* Search icon - Mobile */}
             <button
               className="md:hidden hover:text-magenta transition-colors"
@@ -209,75 +195,18 @@ export default function Header() {
           <nav
             className={`${
               isMenuOpen ? "block" : "hidden"
-            } md:block border-t border-gray-100 md:border-t-0`}
+            } md:hidden border-t border-gray-100`}
           >
-            {/* Desktop Categories Carousel */}
-            <div className="hidden md:flex items-center justify-center py-2 relative">
-              {categories.length > 6 && (
-                <button
-                  onClick={prevCategories}
-                  className="absolute left-0 p-1 hover:text-magenta transition-colors"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-              )}
-
-              <ul className="flex space-x-6">
-                {visibleCategories.map((category) => (
-                  <li key={category.id}>
-                    <Link
-                      href={`/categoria/${
-                        category.slug || category.name.toLowerCase()
-                      }`}
-                      className="nav-link text-sm whitespace-nowrap"
-                    >
-                      {category.name}
-                    </Link>
-                  </li>
-                ))}
-                <li>
-                  <Link
-                    href="/ofertas"
-                    className="nav-link text-sm text-zafiro font-semibold hover:text-zafiro-light whitespace-nowrap"
-                  >
-                    🔥 Ofertas
-                  </Link>
-                </li>
-              </ul>
-
-              {categories.length > 6 && (
-                <button
-                  onClick={nextCategories}
-                  className="absolute right-0 p-1 hover:text-magenta transition-colors"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              )}
+            {/* Mobile Categories Button */}
+            <div className="py-2">
+              <button
+                onClick={() => setIsCategoriesModalOpen(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-magenta text-white rounded-lg hover:bg-magenta-dark transition-colors w-full justify-center"
+              >
+                <Grid3X3 className="h-4 w-4" />
+                <span className="text-sm font-medium">Ver todas las categorías</span>
+              </button>
             </div>
-
-            {/* Mobile Categories List */}
-            <ul className="flex flex-col md:hidden space-y-1 py-2">
-              {categories.map((category) => (
-                <li key={category.id}>
-                  <Link
-                    href={`/categoria/${
-                      category.slug || category.name.toLowerCase()
-                    }`}
-                    className="nav-link block py-1 text-sm"
-                  >
-                    {category.name}
-                  </Link>
-                </li>
-              ))}
-              <li>
-                <Link
-                  href="/ofertas"
-                  className="nav-link block py-1 text-sm text-zafiro font-semibold hover:text-zafiro-light"
-                >
-                  🔥 Ofertas
-                </Link>
-              </li>
-            </ul>
           </nav>
         )}
       </div>
@@ -285,6 +214,11 @@ export default function Header() {
       <SearchModal
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
+      />
+      
+      <CategoriesModal
+        isOpen={isCategoriesModalOpen}
+        onClose={() => setIsCategoriesModalOpen(false)}
       />
     </header>
   );
