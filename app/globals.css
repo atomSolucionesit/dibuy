@@ -12,22 +12,22 @@
     @apply border-border;
   }
   body {
-    @apply bg-blanco text-negro font-balgin;
+    @apply bg-white text-negro font-balgin;
   }
 }
 
 @layer components {
   /* Botones principales con nueva paleta */
   .btn-primary {
-    @apply relative overflow-hidden bg-gradient-primary text-blanco px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
+    @apply relative overflow-hidden bg-gradient-primary text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
   }
 
   .btn-secondary {
-    @apply relative overflow-hidden border-2 border-magenta text-magenta px-6 py-3 rounded-lg font-medium hover:bg-magenta hover:text-blanco transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95;
+    @apply relative overflow-hidden border-2 border-magenta text-magenta px-6 py-3 rounded-lg font-medium hover:bg-magenta hover:text-white transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95;
   }
 
   .btn-zafiro {
-    @apply relative overflow-hidden bg-zafiro text-blanco px-6 py-3 rounded-lg font-medium hover:bg-zafiro-light transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
+    @apply relative overflow-hidden bg-zafiro text-white px-6 py-3 rounded-lg font-medium hover:bg-zafiro-light transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95;
   }
 
   .btn-oro {
@@ -36,7 +36,7 @@
 
   /* Tarjetas de productos */
   .card-product {
-    @apply bg-blanco border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-300 hover:border-magenta/20 hover:scale-[1.02];
+    @apply bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-300 hover:border-magenta/20 hover:scale-[1.02];
   }
 
   .card-featured {
@@ -54,11 +54,11 @@
 
   /* Badges y etiquetas */
   .badge-magenta {
-    @apply bg-magenta text-blanco px-3 py-1 rounded-full text-sm font-medium;
+    @apply bg-magenta text-white px-3 py-1 rounded-full text-sm font-medium;
   }
 
   .badge-zafiro {
-    @apply bg-zafiro text-blanco px-3 py-1 rounded-full text-sm font-medium;
+    @apply bg-zafiro text-white px-3 py-1 rounded-full text-sm font-medium;
   }
 
   .badge-oro {

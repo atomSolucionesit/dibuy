@@ -90,7 +90,6 @@ const config: Config = {
           ring: "hsl(var(--sidebar-ring))",
         },
         black: "#1A1A1A", // Negro Ceniza
-        white: "#E5E5E5", // Blanco Platino
         gray: {
           50: "#f9fafb",
           100: "#f3f4f6",

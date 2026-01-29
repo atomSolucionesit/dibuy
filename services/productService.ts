@@ -15,7 +15,8 @@ export const ProductService = {
 
   async getProductById(id: string) {
     const response = await api.get(`/products/${id}`);
-    return response.data.info?.data || response.data;
+    console.log('Product API Response:', response.data);
+    return response.data.info?.data || response.data.data || response.data;
   },
 
   async getOutstandingProducts(limit = 4) {

@@ -1,32 +1,40 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
-import Image from "next/image"
-import Link from "next/link"
-import { Star, Heart, ShoppingCart, Minus, Plus, Truck, RotateCcw } from "lucide-react"
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
-import { useCart } from "@/contexts/CartContext"
-import { useProductsStore } from "@/store/products"
-import { ProductService } from "@/services/productService"
-import { Product, Brand } from "@/types/api"
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Star,
+  Heart,
+  ShoppingCart,
+  Minus,
+  Plus,
+  Truck,
+  RotateCcw,
+} from "lucide-react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useCart } from "@/contexts/CartContext";
+import { useProductsStore } from "@/store/products";
+import { ProductService } from "@/services/productService";
+import { Product, Brand } from "@/types/api";
 
 export default function ProductPage() {
-  const params = useParams()
+  const params = useParams();
 
-  const { addItem } = useCart()
-  const { products, isLoading, fetchProducts } = useProductsStore()
+  const { addItem } = useCart();
+  const { products, isLoading, fetchProducts } = useProductsStore();
 
-  const [quantity, setQuantity] = useState(1)
-  const [selectedImage, setSelectedImage] = useState(0)
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
   const [product, setProducto] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [brand, setBrand] = useState<string | null>("hola");
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
-  const [isZoomed, setIsZoomed] = useState(false)
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const fetchProduct = async () => {
     try {
@@ -35,7 +43,7 @@ export default function ProductPage() {
       setProducto(product);
     } catch (error) {
       console.error("Error fetching product:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -46,7 +54,7 @@ export default function ProductPage() {
   };
 
   const fetchBrandProduct = async (idBrand: number | undefined) => {
-    const brand = brands.filter(b => b.id === idBrand);
+    const brand = brands.filter((b) => b.id === idBrand);
     setBrand(brand[0]?.name);
   };
 
@@ -59,37 +67,35 @@ export default function ProductPage() {
   }, [params.id]);
 
   useEffect(() => {
-  if (product && products.length > 0) {
-    const categoryId = product.CategoryProduct?.[0].categoryId
+    if (product && products.length > 0) {
+      const categoryId = product.CategoryProduct?.[0].categoryId;
 
-    if (!categoryId) return
+      if (!categoryId) return;
 
-    const filtered = products.filter(
-      (p) => p.CategoryProduct?.[0]?.categoryId === categoryId && p.id !== product.id
-    )
-    setRelatedProducts(filtered.slice(0, 4))
-  }
-}, [product, products])
+      const filtered = products.filter(
+        (p) =>
+          p.CategoryProduct?.[0]?.categoryId === categoryId &&
+          p.id !== product.id,
+      );
+      setRelatedProducts(filtered.slice(0, 4));
+    }
+  }, [product, products]);
 
   useEffect(() => {
-  console.log("Producto actualizado:", product);
-  //console.log("Marcas: ", brands);
-  console.log("Relacionados: ", relatedProducts);
-  
-  fetchBrandProduct(product?.brandId)
-}, [product, brands]);
+    fetchBrandProduct(product?.brandId);
+  }, [product, brands]);
 
   if (loading) {
-  return (
-    <div className="min-h-screen">
-      <Header />
-      <div className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold mb-4">Cargando producto...</h1>
+    return (
+      <div className="min-h-screen">
+        <Header />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <h1 className="text-2xl font-bold mb-4">Cargando producto...</h1>
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
-  );
-}
+    );
+  }
 
   if (!product) {
     return (
@@ -103,7 +109,7 @@ export default function ProductPage() {
         </div>
         <Footer />
       </div>
-    )
+    );
   }
 
   const formatPrice = (price: number) => {
@@ -111,23 +117,21 @@ export default function ProductPage() {
       style: "currency",
       currency: "ARS",
       minimumFractionDigits: 0,
-    }).format(price)
-  }
+    }).format(price);
+  };
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
-      addItem(product)
+      addItem(product);
     }
-  }
+  };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = ((e.clientX - rect.left) / rect.width) * 100
-    const y = ((e.clientY - rect.top) / rect.height) * 100
-    setMousePosition({ x, y })
-  }
-
-  
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePosition({ x, y });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -154,7 +158,7 @@ export default function ProductPage() {
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div 
+            <div
               className="relative overflow-hidden rounded-xl bg-white cursor-zoom-in"
               onMouseEnter={() => setIsZoomed(true)}
               onMouseLeave={() => setIsZoomed(false)}
@@ -176,15 +180,15 @@ export default function ProductPage() {
                 </span>
               )}
               <Image
-                src={product.images[selectedImage].url}
+                src={product?.images[selectedImage]?.url}
                 alt={product.name}
                 width={800}
                 height={800}
                 className={`w-full h-96 md:h-[500px] object-contain transition-transform duration-300 ${
-                  isZoomed ? 'scale-150' : 'scale-100'
+                  isZoomed ? "scale-150" : "scale-100"
                 }`}
                 style={{
-                  transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`
+                  transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`,
                 }}
               />
             </div>
@@ -213,7 +217,9 @@ export default function ProductPage() {
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                {product.name}
+              </h1>
               <div className="flex items-center space-x-4 mb-4">
                 <span className="text-sm text-gray">SKU: {product.sku}</span>
               </div>
@@ -221,21 +227,30 @@ export default function ProductPage() {
 
             <div className="space-y-2">
               <div className="flex items-center space-x-4">
-                <span className="text-3xl font-bold text-primary">{formatPrice(product.sellingPrice)}</span>
+                <span className="text-3xl font-bold text-primary">
+                  {formatPrice(product.sellingPrice)}
+                </span>
                 {product.originalPrice && (
-                  <span className="text-lg text-gray line-through">{formatPrice(product.originalPrice)}</span>
+                  <span className="text-lg text-gray line-through">
+                    {formatPrice(product.originalPrice)}
+                  </span>
                 )}
               </div>
-              {product.originalPrice && (
+              {/* {product.originalPrice && (
                 <div className="flex items-center space-x-2">
                   <span className="text-green-600 font-medium">
                     Ahorrás {formatPrice(product.originalPrice - product.price)}
                   </span>
                   <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
-                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                    {Math.round(
+                      ((product.originalPrice - product.price) /
+                        product.originalPrice) *
+                        100,
+                    )}
+                    % OFF
                   </span>
                 </div>
-              )}
+              )} */}
             </div>
 
             <p className="text-gray-700">{product.description}</p>
@@ -245,11 +260,19 @@ export default function ProductPage() {
               <div className="flex items-center space-x-4">
                 <span className="font-medium">Cantidad:</span>
                 <div className="flex items-center border border-gray-300 rounded-lg">
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-2 hover:bg-gray-100">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="p-2 hover:bg-gray-100"
+                  >
                     <Minus className="h-4 w-4" />
                   </button>
-                  <span className="px-4 py-2 min-w-[60px] text-center">{quantity}</span>
-                  <button onClick={() => setQuantity(quantity + 1)} className="p-2 hover:bg-gray-100">
+                  <span className="px-4 py-2 min-w-[60px] text-center">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="p-2 hover:bg-gray-100"
+                  >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
@@ -309,7 +332,7 @@ export default function ProductPage() {
         */}
 
         {/* Related Products */}
-        { relatedProducts.length > 0 && (
+        {relatedProducts.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">Productos relacionados</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -326,8 +349,12 @@ export default function ProductPage() {
                       height={300}
                       className="w-full h-48 object-contain rounded-lg mb-4"
                     />
-                    <h3 className="font-semibold mb-2 hover:text-primary transition-colors">{relatedProduct.name}</h3>
-                    <p className="text-primary font-bold">{formatPrice(relatedProduct.sellingPrice)}</p>
+                    <h3 className="font-semibold mb-2 hover:text-primary transition-colors">
+                      {relatedProduct.name}
+                    </h3>
+                    <p className="text-primary font-bold">
+                      {formatPrice(relatedProduct.sellingPrice)}
+                    </p>
                   </Link>
                 </div>
               ))}
@@ -338,5 +365,5 @@ export default function ProductPage() {
 
       <Footer />
     </div>
-  )
+  );
 }
