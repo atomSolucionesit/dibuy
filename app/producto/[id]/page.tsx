@@ -221,7 +221,7 @@ export default function ProductPage() {
                 {product.name}
               </h1>
               <div className="flex items-center space-x-4 mb-4">
-                <span className="text-sm text-gray">SKU: {product.sku}</span>
+                <span className="text-sm text-gray">SKU: {product?.sku}</span>
               </div>
             </div>
 
