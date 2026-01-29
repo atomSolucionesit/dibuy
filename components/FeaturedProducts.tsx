@@ -29,6 +29,7 @@ export default function FeaturedProducts() {
     }
   };
 
+  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
       style: "currency",
