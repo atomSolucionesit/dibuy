@@ -1,27 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import {
-  Minus,
-  Plus,
-  Trash2,
-  CreditCard,
-  Truck,
-  Shield,
-  RotateCcw,
-  CheckCircle,
-} from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { useCart } from "@/contexts/CartContext";
-import { createSale, updateSale } from "@/api/sales/saleService";
-import {
-  createToken,
-  createPayment,
-  getPaymentStatus,
-} from "@/services/payments";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { Minus, Plus, Trash2, CreditCard, Truck, Shield, RotateCcw, CheckCircle } from "lucide-react"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
+import { useCart } from "@/contexts/CartContext"
+import { createSale, updateSale } from "@/api/sales/saleService"
+import { createCustomer } from "@/api/customers/customerService"
+import { createToken, createPayment, getPaymentStatus } from "@/services/payments"
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
@@ -88,35 +76,49 @@ export default function CheckoutPage() {
   const envio = state.shipping;
   const total = subtotal + (envio?.price || 0);
 
-  // Paso 1: crear venta
-  const handleCreateSale = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const sale = await createSale({
-        total,
-        subTotal: subtotal,
-        taxAmount: 0,
-        status: "PENDING",
-        origin: "TIENDA",
-        receiptTypeId: 1,
-        documentTypeId: 1,
-        currencyId: 1,
-        paymentCharge: {
-          amountPaid: 0,
-          turned: 0,
-          isCredit: true,
-          date: new Date().toISOString(),
-          dueDate: new Date().toISOString(),
-          outstandingBalance: 0,
-          details: [],
-        },
-        details: state.items.map((item) => ({
-          productId: item.id,
-          quantity: item.quantity,
-          price: item.sellingPrice,
-          discount: 0,
-        })),
-      });
+// Paso 1: crear venta
+const handleCreateSale = async (e: React.FormEvent) => {
+  e.preventDefault()
+  try {
+    const customer = await createCustomer({
+      name: formData.firstName,
+      lastName: formData.lastName,
+      documentNumber: formData.dni,
+      phone: formData.phone,
+      email: formData.email,
+    });
+
+    const customerId = customer?.info?.id;
+    if (!customerId) {
+      throw new Error("Customer ID no disponible");
+    }
+
+    const sale = await createSale({
+      customerId,
+      total,
+      subTotal: subtotal,
+      taxAmount: 0,
+      status: "PENDING",
+      origin: "TIENDA",
+      receiptTypeId: 1,
+      documentTypeId: 1,
+      currencyId: 1,
+      paymentCharge: {
+        amountPaid: 0,
+        turned: 0,
+        isCredit: true,
+        date: new Date().toISOString(),
+        dueDate: new Date().toISOString(),
+        outstandingBalance: 0,
+        details: [],
+      },
+      details: state.items.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.sellingPrice,
+        discount: 0,
+      })),
+    });
 
       setSaleId(sale.info.id);
       setStep(2);
@@ -649,5 +651,5 @@ export default function CheckoutPage() {
         </>
       )}
     </div>
-  );
-}
+  )
+} 
