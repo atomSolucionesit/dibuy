@@ -330,7 +330,7 @@ function ProductsPageContent() {
                       <Heart className="h-3 w-3 md:h-4 md:w-4" />
                     </button>
                     <Link href={`/producto/${product.id}`} className="block">
-                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100">
+                      <div className="relative overflow-hidden rounded-xl bg-white p-4">
                         <Image
                           src={product.images[0]?.url || '/placeholder.svg'}
                           alt={product.name}

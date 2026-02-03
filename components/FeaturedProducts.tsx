@@ -1,33 +1,26 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { Star, Heart, ShoppingCart } from "lucide-react"
-import { useCart } from "@/contexts/CartContext"
+import Image from "next/image";
+import Link from "next/link";
+import { Star, Heart, ShoppingCart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 //import { products } from "@/data/products"
-import { ProductService } from "@/services/productService"
-import { Product } from "@/types/api"
-import { useState, useEffect } from "react"
+import { ProductService } from "@/services/productService";
+import { Product } from "@/types/api";
+import { useState, useEffect } from "react";
 
 export default function FeaturedProducts() {
-
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProductos] = useState<Product[]>([]);
-  const { addItem } = useCart()
+  const { addItem } = useCart();
 
   useEffect(() => {
     fetchProducts();
   }, []);
-
-  useEffect(() => {
-  console.log("Productos actualizados:", products);
-}, [products]);
-
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
       const productsResponse = await ProductService.getProducts(1, 10);
-      console.log('Products response structure:', productsResponse);
       setProductos(productsResponse.data || []);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -41,24 +34,28 @@ export default function FeaturedProducts() {
       style: "currency",
       currency: "ARS",
       minimumFractionDigits: 0,
-    }).format(price)
-  }
+    }).format(price);
+  };
 
   return (
     <section className="py-12 md:py-20 bg-gradient-to-b from-magenta/25 to-zafiro/15">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto md:px-4">
         <div className="text-center mb-12">
-          <span className="badge-magenta mb-4 inline-block">⭐ Productos destacados</span>
+          <span className="badge-magenta mb-4 inline-block">
+            ⭐ Productos destacados
+          </span>
           <h2 className="text-2xl md:text-4xl font-bold mb-4 text-negro">
             Los productos más populares
           </h2>
-          <p className="text-gray-600 text-lg">Los productos más populares y mejor valorados por nuestros clientes</p>
+          <p className="text-gray-600 text-lg">
+            Los productos más populares y mejor valorados por nuestros clientes
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
           {products.map((product) => (
-            <div key={product.id} className="card-product group bg-blanco">
-              <div className="relative mb-4">
+            <div key={product.id} className="card-product group">
+              <div className="relative mb-4 p-4">
                 {product.badge && (
                   <span
                     className={`absolute top-2 left-2 px-3 py-1 text-xs font-medium rounded-full z-10 ${
@@ -88,21 +85,28 @@ export default function FeaturedProducts() {
 
               <div className="space-y-3">
                 <Link href={`/producto/${product.id}`}>
-                  <h3 className="font-semibold hover:text-magenta transition-colors text-negro">{product.name}</h3>
+                  <h3 className="text-xs md:text-lg font-semibold hover:text-magenta transition-colors text-negro">
+                    {product.name}
+                  </h3>
                 </Link>
-
-
 
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2">
-                    <span className="text-xl font-bold text-magenta">{formatPrice(product.sellingPrice)}</span>
+                    <span className="text-xl font-bold text-magenta">
+                      {formatPrice(product.sellingPrice)}
+                    </span>
                     {product.originalPrice && (
-                      <span className="text-sm text-gray-500 line-through">{formatPrice(product.originalPrice)}</span>
+                      <span className="text-sm text-gray-500 line-through">
+                        {formatPrice(product.originalPrice)}
+                      </span>
                     )}
                   </div>
                   {product.originalPrice && (
                     <span className="text-sm text-green-600 font-medium">
-                      💰 Ahorrás {formatPrice(product.originalPrice - product.sellingPrice)}
+                      💰 Ahorrás{" "}
+                      {formatPrice(
+                        product.originalPrice - product.sellingPrice,
+                      )}
                     </span>
                   )}
                 </div>
@@ -111,9 +115,11 @@ export default function FeaturedProducts() {
                   onClick={() => addItem(product)}
                   className="group relative overflow-hidden w-full bg-gradient-primary text-blanco px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center space-x-2 mt-4"
                 >
-                  <span className="relative z-10 flex items-center space-x-2">
+                  <span className="relative z-10 flex items-center md:space-x-2">
                     <ShoppingCart className="h-4 w-4" />
-                    <span>🛒 Agregar al carrito</span>
+                    <span className="text-xs md:text-lg">
+                      Agregar al carrito
+                    </span>
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-blanco/0 via-blanco/10 to-blanco/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 </button>
@@ -133,5 +139,5 @@ export default function FeaturedProducts() {
         </div>
       </div>
     </section>
-  )
+  );
 }

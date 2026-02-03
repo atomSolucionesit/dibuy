@@ -5,10 +5,11 @@ import FeaturedProducts from "@/components/FeaturedProducts";
 import Features from "@/components/Features";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
+import WhatsAppBubble from "@/components/WhatsApp";
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
+    <main>
       <Header />
       <Hero />
       <Categories />
@@ -16,6 +17,7 @@ export default function Home() {
       <Features />
       {/* <Newsletter /> */}
       <Footer />
+      <WhatsAppBubble />
     </main>
   );
 }

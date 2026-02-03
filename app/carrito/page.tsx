@@ -112,50 +112,53 @@ export default function CartPage() {
 
               <div className="space-y-4">
                 {state.items.map((item) => (
-                  <div key={item.id} className="flex gap-4 p-4 border border-gray-200 rounded-lg">
-                    <Image
-                      src={item.images[0].url || "/placeholder.svg"}
-                      alt={item.name}
-                      width={100}
-                      height={100}
-                      className="w-20 h-20 object-cover rounded-lg bg-gray-100"
-                    />
+                  <div key={item.id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg">
+                    <div className="flex-shrink-0 mx-auto sm:mx-0">
+                      <Image
+                        src={item.images?.[0]?.url || "/placeholder.svg"}
+                        alt={item.name}
+                        width={100}
+                        height={100}
+                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-lg bg-gray-100"
+                      />
+                    </div>
 
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-2 text-center sm:text-left">
                       <Link href={`/producto/${item.id}`}>
-                        <h3 className="font-semibold hover:text-primary transition-colors">{item.name}</h3>
+                        <h3 className="font-semibold text-sm sm:text-base hover:text-primary transition-colors line-clamp-2">{item.name}</h3>
                       </Link>
-                      <p className="text-sm text-gray">Marca: {item.brandId}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg font-bold text-primary">{formatPrice(item.sellingPrice)}</span>
+                      <p className="text-xs sm:text-sm text-gray">Marca: {item.brandId}</p>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <span className="text-base sm:text-lg font-bold text-primary">{formatPrice(item.sellingPrice)}</span>
                           {item.originalPrice && (
-                            <span className="text-sm text-gray line-through">{formatPrice(item.originalPrice)}</span>
+                            <span className="text-xs sm:text-sm text-gray line-through">{formatPrice(item.originalPrice)}</span>
                           )}
                         </div>
 
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center justify-center sm:justify-end gap-2">
                           <div className="flex items-center border border-gray-300 rounded-lg">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               className="p-1 hover:bg-gray-100"
                             >
-                              <Minus className="h-4 w-4" />
+                              <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                             </button>
-                            <span className="px-3 py-1 min-w-[40px] text-center text-sm">{item.quantity}</span>
+                            <span className="px-2 sm:px-3 py-1 min-w-[30px] sm:min-w-[40px] text-center text-xs sm:text-sm">{item.quantity}</span>
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               className="p-1 hover:bg-gray-100"
                             >
-                              <Plus className="h-4 w-4" />
+                              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                             </button>
                           </div>
 
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                            className="p-1 sm:p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                           </button>
                         </div>
                       </div>
@@ -282,7 +285,7 @@ export default function CartPage() {
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h3 className="font-semibold mb-4">Beneficios de comprar con nosotros</h3>
               <ul className="space-y-2 text-sm text-gray">
-                <li>✓ Envío gratis en compras superiores a $50.000</li>
+                {/* <li>✓ Envío gratis en compras superiores a $50.000</li> */}
                 <li>✓ Garantía oficial de 12 meses</li>
                 <li>✓ Devolución gratuita hasta 30 días</li>
                 <li>✓ Soporte técnico especializado</li>

@@ -23,12 +23,20 @@ export default function CategoryPage() {
     const loadCategoryProducts = async () => {
       try {
         setLoading(true);
-        const response = await ProductService.getProductsByCategory(slug);
-        setProducts(response.data || []);
-        setCategoryName(slug.charAt(0).toUpperCase() + slug.slice(1));
+        const [productsResponse, categoriesResponse] = await Promise.all([
+          ProductService.getProductsByCategory(slug),
+          ProductService.getCategories()
+        ]);
+        
+        setProducts(productsResponse.data || []);
+        
+        // Buscar el nombre real de la categoría
+        const category = categoriesResponse?.find(cat => cat.id === slug);
+        setCategoryName(category?.name || decodeURIComponent(slug).replace(/-/g, " ").toUpperCase());
       } catch (error) {
         console.error("Error loading category products:", error);
         setProducts([]);
+        setCategoryName(decodeURIComponent(slug).replace(/-/g, " ").toUpperCase());
       } finally {
         setLoading(false);
       }
@@ -67,7 +75,7 @@ export default function CategoryPage() {
 
       {/* Products Grid */}
       <section className="py-12">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto md:px-4">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
@@ -80,7 +88,7 @@ export default function CategoryPage() {
               ))}
             </div>
           ) : products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
               {products.map((product) => (
                 <div key={product.id} className="card-product group bg-white">
                   <div className="relative mb-4">
@@ -98,19 +106,19 @@ export default function CategoryPage() {
                         alt={product.name}
                         width={300}
                         height={300}
-                        className="w-full h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-48 object-contain rounded-lg group-hover:scale-105 transition-transform duration-300"
                       />
                     </Link>
                   </div>
 
                   <div className="space-y-3">
                     <Link href={`/producto/${product.id}`}>
-                      <h3 className="font-semibold hover:text-magenta transition-colors text-negro">
+                      <h3 className="text-xs md:text-lg font-semibold hover:text-magenta transition-colors text-negro">
                         {product.name}
                       </h3>
                     </Link>
 
-                    <div className="flex items-center space-x-1">
+                    {/* <div className="flex items-center space-x-1">
                       <div className="flex">
                         {[...Array(5)].map((_, i) => (
                           <Star
@@ -126,7 +134,7 @@ export default function CategoryPage() {
                       <span className="text-sm text-gray-600">
                         ({product.reviews})
                       </span>
-                    </div>
+                    </div> */}
 
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
@@ -143,7 +151,7 @@ export default function CategoryPage() {
                         <span className="text-sm text-green-600 font-medium">
                           💰 Ahorrás{" "}
                           {formatPrice(
-                            product.originalPrice - product.sellingPrice
+                            product.originalPrice - product.sellingPrice,
                           )}
                         </span>
                       )}
@@ -153,9 +161,11 @@ export default function CategoryPage() {
                       onClick={() => addItem(product)}
                       className="group relative overflow-hidden w-full bg-gradient-primary text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center space-x-2 mt-4"
                     >
-                      <span className="relative z-10 flex items-center space-x-2">
+                      <span className="relative z-10 flex items-center rounded-md md:rounded-none md:space-x-2">
                         <ShoppingCart className="h-4 w-4" />
-                        <span>🛒 Agregar al carrito</span>
+                        <span className="text-xs md:text-md">
+                          Agregar al carrito
+                        </span>
                       </span>
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                     </button>
