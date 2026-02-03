@@ -90,7 +90,7 @@ export default function CategoryPage() {
           ) : products.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
               {products.map((product) => (
-                <div key={product.id} className="card-product group bg-white">
+                <div key={product.id} className="card-product group bg-white flex flex-col h-full">
                   <div className="relative mb-4">
                     {product.badge && (
                       <span className="absolute top-2 left-2 px-3 py-1 text-xs font-medium rounded-full z-10 badge-magenta">
@@ -111,64 +111,48 @@ export default function CategoryPage() {
                     </Link>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="flex flex-col flex-1">
                     <Link href={`/producto/${product.id}`}>
-                      <h3 className="text-xs md:text-lg font-semibold hover:text-magenta transition-colors text-negro">
+                      <h3 className="text-xs md:text-lg font-semibold hover:text-magenta transition-colors text-negro mb-3 line-clamp-2 min-h-[2.5rem]">
                         {product.name}
                       </h3>
                     </Link>
 
-                    {/* <div className="flex items-center space-x-1">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < Math.floor(product.rating)
-                                ? "text-oro fill-current"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-600">
-                        ({product.reviews})
-                      </span>
-                    </div> */}
-
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xl font-bold text-magenta">
-                          {formatPrice(product.sellingPrice)}
-                        </span>
+                    <div className="flex-1 flex flex-col justify-end">
+                      <div className="space-y-1 mb-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xl font-bold text-magenta">
+                            {formatPrice(product.sellingPrice)}
+                          </span>
+                          {product.originalPrice && (
+                            <span className="text-sm text-gray-500 line-through">
+                              {formatPrice(product.originalPrice)}
+                            </span>
+                          )}
+                        </div>
                         {product.originalPrice && (
-                          <span className="text-sm text-gray-500 line-through">
-                            {formatPrice(product.originalPrice)}
+                          <span className="text-sm text-green-600 font-medium">
+                            💰 Ahorrás{" "}
+                            {formatPrice(
+                              product.originalPrice - product.sellingPrice,
+                            )}
                           </span>
                         )}
                       </div>
-                      {product.originalPrice && (
-                        <span className="text-sm text-green-600 font-medium">
-                          💰 Ahorrás{" "}
-                          {formatPrice(
-                            product.originalPrice - product.sellingPrice,
-                          )}
-                        </span>
-                      )}
-                    </div>
 
-                    <button
-                      onClick={() => addItem(product)}
-                      className="group relative overflow-hidden w-full bg-gradient-primary text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center space-x-2 mt-4"
-                    >
-                      <span className="relative z-10 flex items-center rounded-md md:rounded-none md:space-x-2">
-                        <ShoppingCart className="h-4 w-4" />
-                        <span className="text-xs md:text-md">
-                          Agregar al carrito
+                      <button
+                        onClick={() => addItem(product)}
+                        className="group relative overflow-hidden w-full bg-gradient-primary text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
+                      >
+                        <span className="relative z-10 flex items-center rounded-md md:rounded-none md:space-x-2">
+                          <ShoppingCart className="h-4 w-4" />
+                          <span className="text-xs md:text-md">
+                            Agregar al carrito
+                          </span>
                         </span>
-                      </span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                    </button>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
