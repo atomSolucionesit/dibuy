@@ -69,7 +69,7 @@ export default function CheckoutPage() {
   const [cardNumber, setCardNumber] = useState("");
   const [expMonth, setExpMonth] = useState("");
   const [expYear, setExpYear] = useState("");
-  const [construction, setConstruction] = useState(true);
+  const [construction, setConstruction] = useState(false);
   const [cvv, setCvv] = useState("");
 
   const formatPrice = (price: number) => {

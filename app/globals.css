@@ -105,3 +105,21 @@
     box-shadow: 0 4px 14px 0 rgba(231, 211, 26, 0.2);
   }
 }
+/* Custom scrollbar for categories carousel */
+.categories-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.categories-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 2px;
+}
+
+.categories-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #e91e63, #3f51b5);
+  border-radius: 2px;
+}
+
+.categories-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #ad1457, #303f9f);
+}

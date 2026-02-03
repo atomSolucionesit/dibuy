@@ -2,15 +2,28 @@ import { api } from "@/api/index";
 import { Product, Category } from "@/types/api";
 
 export const ProductService = {
+  // Filtrar productos publicados
+  filterPublishedProducts(products: Product[]) {
+    return products.filter(product => product.published === true);
+  },
+
   async getProducts(page = 1, limit = 20, filters = {}) {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
+      published: 'true', // Solo productos publicados
       ...filters,
     });
 
     const response = await api.get(`/products?${params}`);
-    return response.data.info || response.data;
+    const data = response.data.info || response.data;
+    
+    // Filtro adicional del lado cliente
+    if (data.data && Array.isArray(data.data)) {
+      data.data = this.filterPublishedProducts(data.data);
+    }
+    
+    return data;
   },
 
   async getProductById(id: string) {
@@ -19,15 +32,17 @@ export const ProductService = {
   },
 
   async getOutstandingProducts(limit = 4) {
-    const response = await api.get(`/products/outstanding?limit=${limit}`);
-    return response.data.info?.data || response.data;
+    const response = await api.get(`/products/outstanding?limit=${limit}&published=true`);
+    const data = response.data.info?.data || response.data;
+    return Array.isArray(data) ? this.filterPublishedProducts(data) : data;
   },
 
   async searchProducts(query: string) {
     const response = await api.get(
-      `/products/search?q=${encodeURIComponent(query)}`
+      `/products/search?q=${encodeURIComponent(query)}&published=true`
     );
-    return response.data.info?.data || response.data;
+    const data = response.data.info?.data || response.data;
+    return Array.isArray(data) ? this.filterPublishedProducts(data) : data;
   },
 
   async getCategories() {
@@ -37,9 +52,16 @@ export const ProductService = {
 
   async getProductsByCategory(categoryId: string, page = 1, limit = 20) {
     const response = await api.get(
-      `/category/${categoryId}/products?page=${page}&limit=${limit}`
+      `/category/${categoryId}/products?page=${page}&limit=${limit}&published=true`
     );
 
-    return response.data.info || response.data;
+    const data = response.data.info || response.data;
+    
+    // Filtro adicional del lado cliente
+    if (data.data && Array.isArray(data.data)) {
+      data.data = this.filterPublishedProducts(data.data);
+    }
+    
+    return data;
   },
 };

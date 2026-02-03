@@ -136,7 +136,6 @@ export default function Header() {
 
           {/* Right section */}
           <div className="flex items-center space-x-4">
-            
             {/* Search icon - Mobile */}
             <button
               className="md:hidden hover:text-magenta transition-colors"
@@ -181,24 +180,26 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Navigation - Desktop Categories */}
+        {/* Navigation - Desktop Categories Carousel */}
         {!isCartPage && (
           <nav className="hidden md:block border-t border-gray-100">
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center space-x-6 overflow-x-auto">
-                {categories?.slice(0, 5).map((category) => (
-                  <Link
-                    key={category.id}
-                    href={`/categoria/${category.id}`}
-                    className="text-sm font-medium text-gray-700 hover:text-magenta transition-colors whitespace-nowrap"
-                  >
-                    {category.name}
-                  </Link>
-                ))}
+            <div className="flex items-center py-3 gap-4">
+              <div className="flex-1 overflow-hidden">
+                <div className="flex items-center gap-6 overflow-x-auto categories-scroll">
+                  {categories?.map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/categoria/${category.id}`}
+                      className="text-sm font-medium text-gray-700 hover:text-magenta transition-colors whitespace-nowrap px-3 py-2 rounded-md hover:bg-gray-50 flex-shrink-0"
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
               <button
                 onClick={() => setIsCategoriesModalOpen(true)}
-                className="text-sm font-medium text-magenta hover:text-magenta-dark transition-colors"
+                className="text-sm font-medium text-magenta hover:text-magenta-dark transition-colors px-4 py-2 border border-magenta rounded-lg hover:bg-magenta hover:text-white flex-shrink-0"
               >
                 Ver todo
               </button>
@@ -219,7 +220,9 @@ export default function Header() {
                 className="flex items-center space-x-2 px-4 py-2 bg-magenta text-white rounded-lg hover:bg-magenta-dark transition-colors w-full justify-center"
               >
                 <Grid3X3 className="h-4 w-4" />
-                <span className="text-sm font-medium">Ver todas las categorías</span>
+                <span className="text-sm font-medium">
+                  Ver todas las categorías
+                </span>
               </button>
             </div>
           </nav>
@@ -230,7 +233,7 @@ export default function Header() {
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
       />
-      
+
       <CategoriesModal
         isOpen={isCategoriesModalOpen}
         onClose={() => setIsCategoriesModalOpen(false)}
