@@ -8,6 +8,7 @@ import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
 import { createSale, updateSale } from "@/api/sales/saleService"
+import { createCustomer } from "@/api/customers/customerService"
 import { createToken, createPayment, getPaymentStatus } from "@/services/payments"
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
@@ -66,7 +67,21 @@ export default function CheckoutPage() {
 const handleCreateSale = async (e: React.FormEvent) => {
   e.preventDefault()
   try {
+    const customer = await createCustomer({
+      name: formData.firstName,
+      lastName: formData.lastName,
+      documentNumber: formData.dni,
+      phone: formData.phone,
+      email: formData.email,
+    });
+
+    const customerId = customer?.info?.id;
+    if (!customerId) {
+      throw new Error("Customer ID no disponible");
+    }
+
     const sale = await createSale({
+      customerId,
       total,
       subTotal: subtotal,
       taxAmount: 0,
