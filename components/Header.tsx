@@ -68,8 +68,9 @@ export default function Header() {
   const isCartPage = pathname === "/carrito" || pathname === "/checkout";
 
   const messages = [
-    "🔥 Descuentos exclusivos en laptops",
+    "✈️ Envíos a todo el país",
     "🎁 3 y 6 cuotas sin interés",
+    "🔥 Venta Mayorista",
   ];
 
   return (
@@ -101,7 +102,7 @@ export default function Header() {
       )}
       <div className="container mx-auto px-4">
         {/* Main header */}
-        <div className="flex items-center justify-between py-2">
+        <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <Image
@@ -109,7 +110,7 @@ export default function Header() {
               alt="DIBUY"
               width={120}
               height={40}
-              className="h-24 w-auto"
+              className="h-32 w-auto"
             />
           </Link>
 
