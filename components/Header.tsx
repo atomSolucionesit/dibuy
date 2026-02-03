@@ -198,7 +198,6 @@ export default function Header() {
                 </div>
               </div>
               <Link
-                // onClick={() => setIsCategoriesModalOpen(true)}
                 href="/productos"
                 className="text-sm font-medium text-magenta hover:text-magenta-dark transition-colors px-4 py-2 border border-magenta rounded-lg hover:bg-magenta hover:text-white flex-shrink-0"
               >
