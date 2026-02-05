@@ -51,16 +51,9 @@ export default function Hero() {
           (products || []).map(async (product: any, index: any) => {
             const originalImage =
               product.images[0]?.url || "/placeholder.svg?height=400&width=500";
-            let processedImage = originalImage;
-
-            // Procesar imagen para remover fondo solo si es una URL válida
-            if (
-              originalImage &&
-              !originalImage.includes("placeholder.svg") &&
-              originalImage.startsWith("http")
-            ) {
-              processedImage = await getProcessedImage(originalImage);
-            }
+            
+            // Usar imagen original directamente
+            const processedImage = originalImage;
 
             return {
               id: product.id,
