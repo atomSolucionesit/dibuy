@@ -19,6 +19,7 @@ export interface PaginatedResponse<T> {
 // Tipos para productos
 export interface Product {
   id: string;
+  sku: string;
   name: string;
   description: string;
   brand: string;
@@ -33,6 +34,7 @@ export interface Product {
   reviews: number;
   specifications: Record<string, any>;
   isActive: boolean;
+  haveIvaInPrice: boolean;
   createdAt: string;
   updatedAt: string;
   badge: string;
