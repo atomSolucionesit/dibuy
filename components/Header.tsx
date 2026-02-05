@@ -164,6 +164,7 @@ export default function Header() {
               </span>
             </Link>
 
+
             {/* Mobile menu button */}
             <button
               className="md:hidden hover:text-magenta transition-colors"
