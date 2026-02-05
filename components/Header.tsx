@@ -11,20 +11,17 @@ import {
   X,
   User,
   Heart,
-  Grid3X3,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { motion } from "framer-motion";
 import { useCategoryStore } from "@/store/categories";
 import { Category } from "@/types/api";
 import SearchModal from "@/components/SearchModal";
-import CategoriesModal from "@/components/CategoriesModal";
 import { useHero } from "@/contexts/HeroContext";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
   const { state } = useCart();
   const pathname = usePathname();
   const { currentGradient } = useHero();
@@ -216,15 +213,14 @@ export default function Header() {
             } md:hidden border-t border-gray-100`}
           >
             <div className="py-2">
-              <button
-                onClick={() => setIsCategoriesModalOpen(true)}
+              <Link
+                href="/productos"
                 className="flex items-center space-x-2 px-4 py-2 bg-magenta text-white rounded-lg hover:bg-magenta-dark transition-colors w-full justify-center"
               >
-                <Grid3X3 className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  Ver todas las categorías
+                  Ver todos los productos
                 </span>
-              </button>
+              </Link>
             </div>
           </nav>
         )}
@@ -233,11 +229,6 @@ export default function Header() {
       <SearchModal
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
-      />
-
-      <CategoriesModal
-        isOpen={isCategoriesModalOpen}
-        onClose={() => setIsCategoriesModalOpen(false)}
       />
     </header>
   );
