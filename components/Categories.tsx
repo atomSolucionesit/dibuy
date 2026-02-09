@@ -16,7 +16,7 @@ export default function Categories() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const categoriesData = await ProductService.getCategories();
+        const categoriesData = await ProductService.getPublishedCategories();
         setCategories(categoriesData.slice(0, 6));
       } catch (error) {
         console.error("Error loading categories:", error);

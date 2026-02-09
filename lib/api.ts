@@ -18,6 +18,7 @@ const apiClient: AxiosInstance = axios.create(defaultConfig);
 
 const ECOMMERCE_TOKEN_KEY = "ecommerce_token";
 const ECOMMERCE_TOKEN_EXP_KEY = "ecommerce_token_expiry";
+const ECOMMERCE_COMPANY_ID_KEY = "ecommerce_company_id";
 
 const getEcommerceToken = async (): Promise<string | null> => {
   if (typeof window === "undefined") {
@@ -54,6 +55,10 @@ const getEcommerceToken = async (): Promise<string | null> => {
     data?.access_token ||
     data?.token ||
     null;
+  const companyId =
+    data?.info?.user?.companyId ??
+    data?.info?.companyId ??
+    null;
 
   if (token) {
     sessionStorage.setItem(ECOMMERCE_TOKEN_KEY, token);
@@ -61,6 +66,9 @@ const getEcommerceToken = async (): Promise<string | null> => {
       ECOMMERCE_TOKEN_EXP_KEY,
       (Date.now() + 22 * 60 * 60 * 1000).toString()
     );
+  }
+  if (companyId != null) {
+    sessionStorage.setItem(ECOMMERCE_COMPANY_ID_KEY, String(companyId));
   }
 
   return token;
