@@ -7,6 +7,7 @@ import { Product } from "@/types/api"
 export interface CartItem extends Product {
   quantity: number
   weight?: number
+  selectedColor?: string
 }
 
 interface ShippingOption {
@@ -33,23 +34,36 @@ type CartAction =
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "ADD_ITEM": {
-      const existingItem = state.items.find((item) => item.id === action.payload.id)
-
-      if (existingItem) {
-        const updatedItems = state.items.map((item) =>
-          item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item,
-        )
+      const productWithColor = action.payload as Product & { selectedColor?: string }
+      
+      // Buscar si existe el producto (con o sin color)
+      const existingItemIndex = state.items.findIndex((item) => item.id === productWithColor.id)
+      
+      if (existingItemIndex !== -1) {
+        // Si existe, actualizar el item existente
+        const updatedItems = state.items.map((item, index) => {
+          if (index === existingItemIndex) {
+            return {
+              ...item,
+              quantity: item.quantity + 1,
+              selectedColor: productWithColor.selectedColor || item.selectedColor
+            }
+          }
+          return item
+        })
+        
         const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
-        return { items: updatedItems, total, itemCount }
+        return { ...state, items: updatedItems, total, itemCount }
       } else {
-        const newItem = { ...action.payload, quantity: 1 }
+        // Si no existe, crear nuevo item
+        const newItem = { ...productWithColor, quantity: 1 }
         const updatedItems = [...state.items, newItem]
         const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
-        return { items: updatedItems, total, itemCount }
+        return { ...state, items: updatedItems, total, itemCount }
       }
     }
 

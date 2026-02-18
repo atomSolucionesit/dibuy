@@ -2,7 +2,7 @@
 
 // ConfiguraciÃ³n base de la API
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+  process.env.NEXT_PUBLIC_CRM_BASE_URL || "http://localhost:3003/api";
 
 // ConfiguraciÃ³n por defecto de axios
 const defaultConfig: AxiosRequestConfig = {

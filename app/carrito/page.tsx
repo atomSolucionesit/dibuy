@@ -197,6 +197,11 @@ export default function CartPage() {
                       <p className="text-xs sm:text-sm text-gray">
                         Marca: {item.brandId}
                       </p>
+                      {item.selectedColor && (
+                        <p className="text-xs sm:text-sm text-primary">
+                          Color: {item.selectedColor}
+                        </p>
+                      )}
 
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">

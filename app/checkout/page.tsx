@@ -117,6 +117,7 @@ const handleCreateSale = async (e: React.FormEvent) => {
         quantity: item.quantity,
         price: item.sellingPrice,
         discount: 0,
+        selectedColor: item.selectedColor || null,
       })),
     });
 
@@ -575,6 +576,11 @@ const handleCreateSale = async (e: React.FormEvent) => {
                           <p className="text-sm text-gray-500">
                             Cantidad: {item.quantity}
                           </p>
+                          {item.selectedColor && (
+                            <p className="text-sm text-gray-500">
+                              Color: {item.selectedColor}
+                            </p>
+                          )}
                           <p className="text-sm font-medium">
                             {formatPrice(item.sellingPrice)}
                           </p>

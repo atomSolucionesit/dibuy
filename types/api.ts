@@ -20,6 +20,7 @@ export interface PaginatedResponse<T> {
 export interface Product {
   id: string;
   name: string;
+  color: string;
   description: string;
   brand: string;
   price: number;

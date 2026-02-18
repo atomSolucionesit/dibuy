@@ -28,6 +28,7 @@ export default function ProductPage() {
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<string>("");
   const [product, setProducto] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -121,8 +122,12 @@ export default function ProductPage() {
   };
 
   const handleAddToCart = () => {
+    const productWithColor = {
+      ...product,
+      selectedColor: selectedColor || (product.color ? product.color.split(',')[0] : '')
+    };
     for (let i = 0; i < quantity; i++) {
-      addItem(product);
+      addItem(productWithColor);
     }
   };
 
@@ -254,6 +259,28 @@ export default function ProductPage() {
             </div>
 
             <p className="text-gray-700">{product.description}</p>
+
+            {/* Colors */}
+            {product.color && (
+              <div className="space-y-3">
+                <span className="font-medium">Color:</span>
+                <div className="flex flex-wrap gap-2">
+                  {product.color.split(',').map((color, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedColor(color.trim())}
+                      className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
+                        selectedColor === color.trim() || (!selectedColor && index === 0)
+                          ? "border-primary bg-primary text-white"
+                          : "border-gray-300 hover:border-primary"
+                      }`}
+                    >
+                      {color.trim()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Quantity and Add to Cart */}
             <div className="space-y-4">
