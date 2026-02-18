@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useCategoryStore } from "@/store/categories";
-import { useProductsStore } from "@/store/products";
+import { ProductService } from "@/services/productService";
 import { Category, Product } from "@/types/api";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,32 +17,34 @@ export default function CategoriesModal({ isOpen, onClose }: CategoriesModalProp
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const { categories, fetchCategories } = useCategoryStore();
-  const { products: allProducts, fetchProducts } = useProductsStore();
 
-  // Cargar categorías y productos cuando se abre el modal
+  // Cargar categorÃ­as cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       if (categories.length === 0) {
         fetchCategories();
       }
-      if (allProducts.length === 0) {
-        fetchProducts(1, 100); // Cargar más productos para tener variedad
-      }
     }
-  }, [isOpen, categories.length, allProducts.length, fetchCategories, fetchProducts]);
+  }, [isOpen, categories.length, fetchCategories]);
 
   useEffect(() => {
-    if (selectedCategory) {
-      const categoryProducts = allProducts.filter(product => {
-        if (product.CategoryProduct && Array.isArray(product.CategoryProduct)) {
-          return product.CategoryProduct.some(cat => cat.categoryId === selectedCategory.id);
-        }
-        return false;
-      });
-      
-      setProducts(categoryProducts.slice(0, 12));
-    }
-  }, [selectedCategory, allProducts]);
+    const loadProducts = async () => {
+      if (!selectedCategory) return;
+      try {
+        const response = await ProductService.getProductsByCategory(
+          selectedCategory.id,
+          1,
+          12
+        );
+        setProducts(response?.data || []);
+      } catch (error) {
+        console.error("Error loading category products:", error);
+        setProducts([]);
+      }
+    };
+
+    loadProducts();
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (categories.length > 0 && !selectedCategory) {
@@ -65,7 +67,7 @@ export default function CategoriesModal({ isOpen, onClose }: CategoriesModalProp
       <div className="bg-white rounded-t-xl sm:rounded-xl w-full max-w-6xl h-[90vh] sm:h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b">
-          <h2 className="text-xl sm:text-2xl font-bold">Categorías</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">CategorÃ­as</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -131,7 +133,7 @@ export default function CategoriesModal({ isOpen, onClose }: CategoriesModalProp
                 </div>
                 {products.length === 0 && (
                   <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">
-                    No hay productos disponibles en esta categoría
+                    No hay productos disponibles en esta categorÃ­a
                   </div>
                 )}
               </>

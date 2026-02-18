@@ -15,7 +15,7 @@ export const useCategoryStore = create<CategoryState>((set) => ({
   fetchCategories: async () => {
     set({ isLoading: true })
     try {
-      const categories = await ProductService.getCategories()
+      const categories = await ProductService.getPublishedCategories()
       set({ categories: categories || [] })
     } catch (error) {
       console.error("Error fetching categories:", error)

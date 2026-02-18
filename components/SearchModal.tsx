@@ -6,7 +6,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useProductsStore } from "@/store/products";
 import { useCategoryStore } from "@/store/categories";
 import { ProductService } from "@/services/productService";
 import { Product, Category } from "@/types/api";
@@ -24,17 +23,13 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const router = useRouter();
 
   const { categories: allCategories, fetchCategories } = useCategoryStore();
-  const { products, fetchProducts } = useProductsStore();
 
   useEffect(() => {
     // Cargar datos si no están disponibles
     if (allCategories.length === 0) {
       fetchCategories();
     }
-    if (products.length === 0) {
-      fetchProducts();
-    }
-  }, [allCategories.length, products.length, fetchCategories, fetchProducts]);
+  }, [allCategories.length, fetchCategories]);
 
   useEffect(() => {
     setCategories(allCategories.slice(0, 6));

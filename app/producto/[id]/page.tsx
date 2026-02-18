@@ -16,7 +16,6 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
-import { useProductsStore } from "@/store/products";
 import { ProductService } from "@/services/productService";
 import { Product, Brand } from "@/types/api";
 
@@ -24,8 +23,6 @@ export default function ProductPage() {
   const params = useParams();
 
   const { addItem } = useCart();
-  const { products, isLoading, fetchProducts } = useProductsStore();
-
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string>("");
@@ -63,24 +60,32 @@ export default function ProductPage() {
     if (params.id) {
       fetchProduct();
       fetchBrands();
-      fetchProducts();
     }
   }, [params.id]);
 
   useEffect(() => {
-    if (product && products.length > 0) {
+    const loadRelated = async () => {
+      if (!product) return;
       const categoryId = product.CategoryProduct?.[0].categoryId;
-
       if (!categoryId) return;
 
-      const filtered = products.filter(
-        (p) =>
-          p.CategoryProduct?.[0]?.categoryId === categoryId &&
-          p.id !== product.id,
-      );
-      setRelatedProducts(filtered.slice(0, 4));
-    }
-  }, [product, products]);
+      try {
+        const response = await ProductService.getProductsByCategory(
+          categoryId,
+          1,
+          8
+        );
+        const data = response?.data || [];
+        const filtered = data.filter((p: Product) => p.id !== product.id);
+        setRelatedProducts(filtered.slice(0, 4));
+      } catch (error) {
+        console.error("Error fetching related products:", error);
+        setRelatedProducts([]);
+      }
+    };
+
+    loadRelated();
+  }, [product]);
 
   useEffect(() => {
     fetchBrandProduct(product?.brandId);
@@ -240,6 +245,9 @@ export default function ProductPage() {
                     {formatPrice(product.originalPrice)}
                   </span>
                 )}
+              </div>
+              <div className="flex items-center space-x-4 text-xs text-gray">
+                {product.haveIvaInPrice ? "Precio c/IVA incluído" : "Precio s/IVA incluído"}
               </div>
               {/* {product.originalPrice && (
                 <div className="flex items-center space-x-2">

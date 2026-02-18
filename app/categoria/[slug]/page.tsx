@@ -25,7 +25,7 @@ export default function CategoryPage() {
         setLoading(true);
         const [productsResponse, categoriesResponse] = await Promise.all([
           ProductService.getProductsByCategory(slug),
-          ProductService.getCategories()
+          ProductService.getPublishedCategories()
         ]);
         
         setProducts(productsResponse.data || []);
