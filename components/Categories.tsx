@@ -92,7 +92,7 @@ export default function Categories() {
                   )}`}
                 >
                   <div className="mb-4 relative">
-                    <div className="w-16 h-16 md:w-20 md:h-20 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center text-2xl md:text-3xl">
+                    <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-lg flex items-center justify-center text-2xl md:text-3xl">
                       {icon}
                     </div>
                     <div
