@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,6 +26,17 @@ function ProductsPageContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const itemsPerPage = 12;
+
+  // ref for scrolling to top of product list
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const scrollToListTop = () => {
+    if (listRef.current) {
+      listRef.current.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const sortOptions = [
     { id: "featured", name: "Destacados" },
@@ -55,6 +66,11 @@ function ProductsPageContent() {
       setCurrentPage(meta.page);
     }
   }, [meta]);
+
+  // scroll to top when page changes (after render)
+  useEffect(() => {
+    scrollToListTop();
+  }, [currentPage]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -110,7 +126,7 @@ function ProductsPageContent() {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8" ref={listRef}>
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Filters */}
           <aside
@@ -442,6 +458,7 @@ function ProductsPageContent() {
                       itemsPerPage,
                       selectedCategory === "all" ? undefined : selectedCategory,
                     );
+                    scrollToListTop();
                   }}
                   disabled={currentPage === 1}
                   className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-magenta hover:text-blanco transition-colors"
@@ -463,6 +480,7 @@ function ProductsPageContent() {
                             ? undefined
                             : selectedCategory,
                         );
+                        scrollToListTop();
                       }}
                       className={`px-4 py-2 rounded-lg transition-colors ${
                         currentPage === page
@@ -484,6 +502,7 @@ function ProductsPageContent() {
                       itemsPerPage,
                       selectedCategory === "all" ? undefined : selectedCategory,
                     );
+                    scrollToListTop();
                   }}
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-magenta hover:text-blanco transition-colors"
