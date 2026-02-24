@@ -54,7 +54,7 @@ export default function Categories() {
     <section className="py-12 md:py-20 bg-gradient-to-b from-zafiro/60 to-magenta/25">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <span className="badge-zafiro mb-4 inline-block">🏷️ Categorías</span>
+          {/* <span className="badge-zafiro mb-4 inline-block">🏷️ Categorías</span> */}
           <h2 className="text-2xl md:text-4xl font-bold mb-4 text-negro">
             Explora por categorías
           </h2>
