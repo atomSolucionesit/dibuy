@@ -392,12 +392,7 @@ function SearchPageContent() {
                             </span>
                           )}
                         </div>
-                        {product.originalPrice && (
-                          <span className="text-sm text-green-600 font-medium">
-                            Ahorrás{" "}
-                            {formatPrice(product.originalPrice - product.price)}
-                          </span>
-                        )}
+
                       </div>
                       <button
                         onClick={() => addItem(product)}

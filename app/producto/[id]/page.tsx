@@ -249,21 +249,7 @@ export default function ProductPage() {
               <div className="flex items-center space-x-4 text-xs text-gray">
                 {product.haveIvaInPrice ? "Precio c/IVA incluído" : "Precio s/IVA incluído"}
               </div>
-              {/* {product.originalPrice && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-green-600 font-medium">
-                    Ahorrás {formatPrice(product.originalPrice - product.price)}
-                  </span>
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
-                    {Math.round(
-                      ((product.originalPrice - product.price) /
-                        product.originalPrice) *
-                        100,
-                    )}
-                    % OFF
-                  </span>
-                </div>
-              )} */}
+
             </div>
 
             <p className="text-gray-700">{product.description}</p>

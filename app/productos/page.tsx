@@ -410,18 +410,7 @@ function ProductsPageContent() {
                                 </span>
                               )}
                           </div>
-                          {product.originalPrice &&
-                            product.originalPrice > product.sellingPrice && (
-                              <div className="flex items-center space-x-1">
-                                <span className="text-xs md:text-sm text-green-600 font-medium">
-                                  💰 Ahorrás{" "}
-                                  {formatPrice(
-                                    product.originalPrice -
-                                      product.sellingPrice,
-                                  )}
-                                </span>
-                              </div>
-                            )}
+
                         </div>
                       </div>
 

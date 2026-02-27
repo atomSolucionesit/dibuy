@@ -1,15 +1,28 @@
 "use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { Minus, Plus, Trash2, CreditCard, Truck, Shield, RotateCcw, CheckCircle } from "lucide-react"
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
-import { useCart } from "@/contexts/CartContext"
-import { createSale, updateSale } from "@/api/sales/saleService"
-import { createCustomer } from "@/api/customers/customerService"
-import { createToken, createPayment, getPaymentStatus } from "@/services/payments"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  Minus,
+  Plus,
+  Trash2,
+  CreditCard,
+  Truck,
+  Shield,
+  RotateCcw,
+  CheckCircle,
+} from "lucide-react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useCart } from "@/contexts/CartContext";
+import { createSale, updateSale } from "@/api/sales/saleService";
+import { createCustomer } from "@/api/customers/customerService";
+import {
+  createToken,
+  createPayment,
+  getPaymentStatus,
+} from "@/services/payments";
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
@@ -32,6 +45,7 @@ const shippingMethods = [
     time: "1-2 días hábiles",
   },
   { id: "premium", name: "Envío premium", price: 10000, time: "Mismo día" },
+  { id: "branch", name: "Retiro en sucursal", price: 0, time: "Retirás en la sucursal" },
 ];
 
 export default function CheckoutPage() {
@@ -59,6 +73,11 @@ export default function CheckoutPage() {
   const [expYear, setExpYear] = useState("");
   const [construction, setConstruction] = useState(false);
   const [cvv, setCvv] = useState("");
+  // shipping map state
+  const [lat, setLat] = useState<string | null>(null);
+  const [lng, setLng] = useState<string | null>(null);
+  const [mapUrl, setMapUrl] = useState<string | null>(null);
+  const [isSearchingMap, setIsSearchingMap] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -76,53 +95,126 @@ export default function CheckoutPage() {
   const envio = state.shipping;
   const total = subtotal + (envio?.price || 0);
 
-// Paso 1: crear venta
-const handleCreateSale = async (e: React.FormEvent) => {
-  e.preventDefault()
-  try {
-    const customer = await createCustomer({
-      name: formData.firstName,
-      lastName: formData.lastName,
-      documentNumber: formData.dni,
-      phone: formData.phone,
-      email: formData.email,
-    });
+  // Paso 1: personal info submit -> avanzar a envío
+  const handlePersonalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // if pickup, create sale immediately (no shippingAddress) and skip to payment
+    if (formData.shippingMethod === "branch") {
+      try {
+        // create customer
+        const customer = await createCustomer({
+          name: formData.firstName,
+          lastName: formData.lastName,
+          documentNumber: formData.dni,
+          phone: formData.phone,
+          email: formData.email,
+        });
 
-    const customerId = customer?.info?.id;
-    if (!customerId) {
-      throw new Error("Customer ID no disponible");
+        const customerId = customer?.info?.id;
+        if (!customerId) throw new Error("Customer ID no disponible");
+
+        // build minimal sale payload (no shippingAddress)
+        const salePayload: any = {
+          customerId,
+          total,
+          subTotal: subtotal,
+          taxAmount: 0,
+          status: "PENDING",
+          origin: "TIENDA",
+          receiptTypeId: 1,
+          documentTypeId: 1,
+          currencyId: 1,
+          paymentCharge: {
+            amountPaid: 0,
+            turned: 0,
+            isCredit: true,
+            date: new Date().toISOString(),
+            dueDate: new Date().toISOString(),
+            outstandingBalance: 0,
+            details: [],
+          },
+          details: state.items.map((item) => ({
+            productId: item.id,
+            quantity: item.quantity,
+            price: item.sellingPrice,
+            discount: 0,
+            selectedColor: item.selectedColor || null,
+          })),
+        };
+
+        const sale = await createSale(salePayload);
+        setSaleId(sale.info.id);
+        setStep(3);
+      } catch (err) {
+        console.error(err);
+        alert("Error al crear la venta para retiro en sucursal");
+      }
+    } else {
+      setStep(2);
     }
+  };
 
-    const sale = await createSale({
-      customerId,
-      total,
-      subTotal: subtotal,
-      taxAmount: 0,
-      status: "PENDING",
-      origin: "TIENDA",
-      receiptTypeId: 1,
-      documentTypeId: 1,
-      currencyId: 1,
-      paymentCharge: {
-        amountPaid: 0,
-        turned: 0,
-        isCredit: true,
-        date: new Date().toISOString(),
-        dueDate: new Date().toISOString(),
-        outstandingBalance: 0,
-        details: [],
-      },
-      details: state.items.map((item) => ({
+  // Paso 2: crear venta (incluye datos de envío) y avanzar a pago
+  const handleCreateSale = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const customer = await createCustomer({
+        name: formData.firstName,
+        lastName: formData.lastName,
+        documentNumber: formData.dni,
+        phone: formData.phone,
+        email: formData.email,
+      });
+
+      const customerId = customer?.info?.id;
+      if (!customerId) {
+        throw new Error("Customer ID no disponible");
+      }
+
+      // build payload
+      const salePayload: any = {
+        customerId,
+        total,
+        subTotal: subtotal,
+        taxAmount: 0,
+        status: "PENDING",
+        origin: "TIENDA",
+        receiptTypeId: 1,
+        documentTypeId: 1,
+        currencyId: 1,
+        paymentCharge: {
+          amountPaid: 0,
+          turned: 0,
+          isCredit: true,
+          date: new Date().toISOString(),
+          dueDate: new Date().toISOString(),
+          outstandingBalance: 0,
+          details: [],
+        },
+      };
+
+      if (formData.shippingMethod !== "branch") {
+        salePayload.shippingAddress = {
+          address: formData.address,
+          city: formData.city,
+          postalCode: formData.postalCode,
+          latitude: lat,
+          longitude: lng,
+        };
+      }
+
+      salePayload.details = state.items.map((item) => ({
         productId: item.id,
         quantity: item.quantity,
         price: item.sellingPrice,
         discount: 0,
         selectedColor: item.selectedColor || null,
-      })),
-    });
+      }));
+
+      const sale = await createSale(salePayload);
 
       setSaleId(sale.info.id);
-      setStep(2);
+      setStep(3);
     } catch (err) {
       console.error(err);
       alert("Error al crear la venta");
@@ -231,7 +323,9 @@ const handleCreateSale = async (e: React.FormEvent) => {
                         Datos personales
                       </span>
                     </div>
+
                     <div className="flex-1 h-px bg-gray-200 mx-4"></div>
+
                     <div className="flex items-center space-x-4">
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -245,6 +339,25 @@ const handleCreateSale = async (e: React.FormEvent) => {
                       <span
                         className={step >= 2 ? "font-medium" : "text-gray-500"}
                       >
+                        Envío
+                      </span>
+                    </div>
+
+                    <div className="flex-1 h-px bg-gray-200 mx-4"></div>
+
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          step >= 3
+                            ? "bg-primary text-white"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
+                      >
+                        {step > 3 ? <CheckCircle className="h-5 w-5" /> : "3"}
+                      </div>
+                      <span
+                        className={step >= 3 ? "font-medium" : "text-gray-500"}
+                      >
                         Pago
                       </span>
                     </div>
@@ -257,7 +370,7 @@ const handleCreateSale = async (e: React.FormEvent) => {
                     <h2 className="text-2xl font-bold mb-6">
                       Información personal
                     </h2>
-                    <form onSubmit={handleCreateSale} className="space-y-6">
+                    <form onSubmit={handlePersonalSubmit} className="space-y-6">
                       <div className="grid md:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-sm font-medium mb-2">
@@ -345,7 +458,46 @@ const handleCreateSale = async (e: React.FormEvent) => {
                           />
                         </div>
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Método de envío
+                        </label>
+                        <select
+                          required
+                          value={formData.shippingMethod}
+                          onChange={(e) =>
+                            setFormData({ ...formData, shippingMethod: e.target.value })
+                          }
+                          className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
+                        >
+                          {shippingMethods.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
+                      <button
+                        type="submit"
+                        className="group relative overflow-hidden w-full bg-gradient-primary text-white px-6 py-4 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                      >
+                        <span className="relative z-10">
+                          Continuar al envío
+                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+                {/* Step 2: Shipping (address + map) */}
+                {step === 2 && formData.shippingMethod !== "branch" && (
+                  <div className="bg-white rounded-xl p-6 shadow-sm">
+                    <h2 className="text-2xl font-bold mb-6">
+                      Dirección de envío
+                    </h2>
+                    <form onSubmit={handleCreateSale} className="space-y-6">
                       <div>
                         <label className="block text-sm font-medium mb-2">
                           Dirección
@@ -398,19 +550,90 @@ const handleCreateSale = async (e: React.FormEvent) => {
                         </div>
                       </div>
 
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            // geocode address using Nominatim
+                            try {
+                              setIsSearchingMap(true);
+                              const q = `${formData.address}, ${formData.city}, ${formData.postalCode}`;
+                              const res = await fetch(
+                                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`,
+                                { headers: { "Accept-Language": "es" } },
+                              );
+                              const results = await res.json();
+                              if (results && results.length) {
+                                const r = results[0];
+                                setLat(r.lat);
+                                setLng(r.lon);
+                                setMapUrl(
+                                  `https://staticmap.openstreetmap.de/staticmap.php?center=${r.lat},${r.lon}&zoom=15&size=600x400&markers=${r.lat},${r.lon},red-pushpin`,
+                                );
+                              } else {
+                                alert(
+                                  "No se encontraron coordenadas para esa dirección",
+                                );
+                              }
+                            } catch (err) {
+                              console.error(err);
+                              alert("Error al buscar la dirección");
+                            } finally {
+                              setIsSearchingMap(false);
+                            }
+                          }}
+                          className="px-4 py-2 bg-magenta text-white rounded-lg"
+                        >
+                          {isSearchingMap ? "Buscando..." : "Buscar en mapa"}
+                        </button>
+
+                        <div className="text-sm text-gray-600">
+                          {lat && lng ? (
+                            <span>
+                              Lat: {lat} • Lng: {lng}
+                            </span>
+                          ) : (
+                            <span>No se han obtenido coordenadas</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {lat && lng ? (
+                        <div className="mt-4 h-64 w-full rounded-md overflow-hidden border">
+                          <iframe
+                            title="Mapa de dirección"
+                            src={`https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`}
+                            width="100%"
+                            height="100%"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                        </div>
+                      ) : mapUrl ? (
+                        <div className="mt-4">
+                          <img
+                            src={mapUrl}
+                            alt="Mapa de dirección"
+                            className="w-full rounded-md border"
+                          />
+                        </div>
+                      ) : null}
+
                       <button
                         type="submit"
                         className="group relative overflow-hidden w-full bg-gradient-primary text-white px-6 py-4 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
                       >
-                        <span className="relative z-10">Continuar al pago</span>
+                        <span className="relative z-10">
+                          Continuar con pago
+                        </span>
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                       </button>
                     </form>
                   </div>
                 )}
 
-                {/* Step 2: Payment */}
-                {step === 2 && (
+                {/* Step 3: Payment */}
+                {step === 3 && (
                   <form
                     onSubmit={handleProcessPayment}
                     className="space-y-6 bg-white rounded-xl p-6 shadow-sm"
@@ -559,7 +782,12 @@ const handleCreateSale = async (e: React.FormEvent) => {
               <div className="space-y-6">
                 <div className="bg-white rounded-xl p-6 shadow-sm">
                   <h2 className="text-xl font-bold mb-4">Resumen del pedido</h2>
-
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Shield className="h-4 w-4 text-green-600" />
+                    <p className="text-sm text-gray-600">
+                      Tus datos están protegidos con encriptación SSL
+                    </p>
+                  </div>
                   {/* Cart Items */}
                   <div className="space-y-4 mb-6">
                     {state.items.map((item) => (
@@ -657,5 +885,5 @@ const handleCreateSale = async (e: React.FormEvent) => {
         </>
       )}
     </div>
-  )
-} 
+  );
+}
