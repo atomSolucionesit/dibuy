@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
 import { useHero } from "@/contexts/HeroContext";
@@ -18,6 +19,8 @@ interface HeroSlide {
   price?: number;
   originalPrice?: number;
   outstandingDescription?: string;
+  fallbackImage?: string;
+  fileName?: string;
 }
 
 const gradients = [
@@ -38,31 +41,48 @@ export default function Hero() {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const slidesRefs = useRef<Array<HTMLDivElement | null>>([]);
 
-  const banners = ["BANNER-1.jpeg", "BANNER-2.jpeg", "BANNER-3.jpeg"];
+  // list of banner filenames; actual path determined by `isMobile` state
+  const banners = [
+    "BANNER-1.jpg.jpeg",
+    "BANNER-2.jpg.jpeg",
+    "BANNER-3.jpg.jpeg",
+    "BANNERS-4.jpg.jpeg",
+  ];
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    const bannerSlides: HeroSlide[] = banners.map((banner, index) => ({
-      id: `banner-${index}`,
-      title: "Bienvenido a nuestra tienda",
-      subtitle: "Ofertas imperdibles",
-      description: "",
-      badge: "✨ Promoción",
-      image: `/${banner}`,
-      primaryButton: { text: "Comprar ahora", href: "/productos" },
-      secondaryButton: { text: "Ver catálogo", href: "/productos" },
-      gradient: gradients[index % gradients.length],
-      outstandingDescription: "Los mejores precios del mercado",
-    }));
+    if (typeof isMobile === "undefined") return; // wait until hook has evaluated
+
+    const bannerSlides: HeroSlide[] = banners.map((banner, index) => {
+      const imagePath = isMobile
+        ? `/banner/mobile/${banner}`
+        : `/banner/desktop/${banner}`;
+      const fallback = `/banner/${banner}`; // use unversioned path if device-specific missing
+      return {
+        id: `banner-${index}`,
+        title: "Bienvenido a nuestra tienda",
+        subtitle: "Ofertas imperdibles",
+        description: "",
+        badge: "✨ Promoción",
+        image: imagePath,
+        fallbackImage: fallback,
+        fileName: banner,
+        primaryButton: { text: "Comprar ahora", href: "/productos" },
+        secondaryButton: { text: "Ver catálogo", href: "/productos" },
+        gradient: gradients[index % gradients.length],
+        outstandingDescription: "Los mejores precios del mercado",
+      };
+    });
 
     setSlides(bannerSlides);
     setCurrentSlide(1); // Reset to 1 (first real slide after clone)
     setLoading(false);
-  }, []);
+  }, [isMobile]);
 
   // Handle infinite carousel reset at edges
   useEffect(() => {
     if (slides.length === 0) return;
-    
+
     if (currentSlide === 0) {
       // Jumped to clone of last slide, reset to real last slide
       setIsInfiniteJump(true);
@@ -91,12 +111,9 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [isPlaying, isInfiniteJump, slides.length]);
 
-
-
   const goToSlide = (index: number) => {
     // index is 0-based for real slides, convert to cloned array index (add 1)
-    if (isTransitioning || slides.length === 0)
-      return;
+    if (isTransitioning || slides.length === 0) return;
     setIsTransitioning(true);
     setCurrentSlide(index + 1); // +1 because array has clone at start
     setContextSlide(index);
@@ -141,19 +158,26 @@ export default function Hero() {
   }
 
   // Create cloned carousel: [lastSlide, ...slides, firstSlide]
-  const clonedSlides = slides.length > 0 ? [
-    slides[slides.length - 1], // Clone of last slide at start
-    ...slides,
-    slides[0], // Clone of first slide at end
-  ] : [];
+  const clonedSlides =
+    slides.length > 0
+      ? [
+          slides[slides.length - 1], // Clone of last slide at start
+          ...slides,
+          slides[0], // Clone of first slide at end
+        ]
+      : [];
+
+  // decide container appearance based on device
+  const sliderContainerClasses = `relative w-full overflow-hidden bg-black ${isMobile ? 'h-auto' : ''}`;
+  const slideWrapperClasses = `relative w-full ${isMobile ? 'h-auto' : 'aspect-[1920/500]'} flex ${!isInfiniteJump ? 'transition-transform duration-500 ease-in-out' : ''}`;
 
   return (
     <section className="relative w-full">
       {/* Slides Container: infinite carousel */}
-      <section className="relative w-full overflow-hidden bg-black">
+      <section className={sliderContainerClasses}>
         <div
           ref={sliderRef}
-          className={`relative w-full aspect-[1920/500] flex ${!isInfiniteJump ? 'transition-transform duration-500 ease-in-out' : ''}`}
+          className={slideWrapperClasses}
           style={{
             transform: `translateX(-${currentSlide * 100}%)`,
           }}
@@ -166,28 +190,48 @@ export default function Hero() {
               }}
               className="w-full h-full flex-shrink-0 flex items-center justify-center"
             >
-              <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+              <img
+                src={slide.image}
+                alt={slide.title}
+                className={isMobile ? "w-full h-auto object-contain" : "w-full h-full object-cover"}
+                onError={(e) => {
+                  const img = e.currentTarget as HTMLImageElement;
+                  try {
+                    const currentPath = new URL(img.src).pathname;
+                    if (
+                      slide.fallbackImage &&
+                      currentPath !== slide.fallbackImage
+                    ) {
+                      img.src = slide.fallbackImage;
+                    }
+                  } catch (_err) {
+                    if (slide.fallbackImage) img.src = slide.fallbackImage;
+                  }
+                }}
+              />
             </div>
           ))}
         </div>
       </section>
-      {/* Navigation Controls */}
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 flex justify-between px-4">
-        <button
-          onClick={prevSlide}
-          disabled={isTransitioning}
-          className="p-2 bg-blanco/10 backdrop-blur-sm border border-blanco/20 rounded-full text-blanco hover:bg-blanco/20 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          onClick={nextSlide}
-          disabled={isTransitioning}
-          className="p-2 bg-blanco/10 backdrop-blur-sm border border-blanco/20 rounded-full text-blanco hover:bg-blanco/20 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
+      {/* Navigation Controls (hidden on mobile) */}
+      {!isMobile && (
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 flex justify-between px-4">
+          <button
+            onClick={prevSlide}
+            disabled={isTransitioning}
+            className="p-2 bg-blanco/10 backdrop-blur-sm border border-blanco/20 rounded-full text-blanco hover:bg-blanco/20 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            onClick={nextSlide}
+            disabled={isTransitioning}
+            className="p-2 bg-blanco/10 backdrop-blur-sm border border-blanco/20 rounded-full text-blanco hover:bg-blanco/20 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      )}
 
       {/* Play/Pause Control */}
       <div className="absolute top-4 right-4 z-20">
