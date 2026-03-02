@@ -39,20 +39,21 @@ export default function Categories() {
   }, [isMobile]);
 
   useEffect(() => {
+    const defaultCategories = [
+      { id: "1", name: "Smartphones", slug: "smartphones" },
+      { id: "2", name: "Laptops", slug: "laptops" },
+      { id: "3", name: "Tablets", slug: "tablets" },
+      { id: "4", name: "Accesorios", slug: "accesorios" },
+      { id: "5", name: "Gaming", slug: "gaming" },
+      { id: "6", name: "Audio", slug: "audio" },
+    ];
+
     const loadCategories = async () => {
       try {
         const categoriesData = await ProductService.getPublishedCategories();
         setCategories(categoriesData.slice(0, 6));
       } catch (error) {
-        console.error("Error loading categories:", error);
-        setCategories([
-          { id: "1", name: "Smartphones", slug: "smartphones" },
-          { id: "2", name: "Laptops", slug: "laptops" },
-          { id: "3", name: "Tablets", slug: "tablets" },
-          { id: "4", name: "Accesorios", slug: "accesorios" },
-          { id: "5", name: "Gaming", slug: "gaming" },
-          { id: "6", name: "Audio", slug: "audio" },
-        ]);
+        setCategories(defaultCategories);
       } finally {
         setLoading(false);
       }
@@ -86,10 +87,7 @@ export default function Categories() {
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  const visibleCategories = categories.slice(
-    currentIndex,
-    currentIndex + itemsPerSlide
-  );
+
 
   return (
     <section className="py-12 md:py-20 bg-gradient-to-b from-zafiro/60 to-magenta/25">
@@ -109,7 +107,7 @@ export default function Categories() {
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="bg-blanco rounded-xl p-4 md:p-6 text-center animate-pulse"
+                className="bg-blanco rounded-xl p-4 md:p-4 text-center animate-pulse"
               >
                 <div className="w-16 h-16 md:w-20 md:h-20 mx-auto bg-gray-200 rounded-lg mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -125,7 +123,7 @@ export default function Categories() {
                 ref={carouselRef}
                 className="flex transition-transform duration-500 ease-out gap-4 md:gap-6"
                 style={{
-                  transform: `translateX(-${currentIndex * (100 / itemsPerSlide)}%)`
+                  transform: `translateX(calc(-${currentIndex * 100}% - ${currentIndex * (itemsPerSlide === 1 ? 16 : itemsPerSlide === 2 ? 12 : 16)}px))`
                 }}
               >
                 {categories.map((category, index) => {
@@ -191,21 +189,6 @@ export default function Categories() {
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
-                </div>
-
-                {/* Indicators (dots) */}
-                <div className="flex justify-center gap-2 mt-8">
-                  {Array.from({ length: totalSlides }).map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => goToSlide(index)}
-                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                        index === currentSlide
-                          ? "bg-magenta w-8"
-                          : "bg-magenta/30 hover:bg-magenta/60"
-                      }`}
-                    />
-                  ))}
                 </div>
               </>
             )}
