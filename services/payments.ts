@@ -45,7 +45,8 @@ export const createPayment = async (
   amount: number,
   saleId: string | null,
   deviceFingerprintId: string | null,
-  paymentMethodId?: number
+  paymentMethodId?: number,
+  installments?: number
 ) => {
   try {
     const res = await api.post("/payway/payment", {
@@ -53,12 +54,24 @@ export const createPayment = async (
       amount,
       saleId,
       deviceFingerprintId,
-      paymentMethodId
+      paymentMethodId,
+      installments,
     });
     return res.data;
   } catch (error) {
     console.error("Error creating payment:", error);
     throw error;
+  }
+};
+
+export const getInstallmentOptions = async (paymentMethodId?: number) => {
+  try {
+    const query = paymentMethodId ? `?paymentMethodId=${paymentMethodId}` : "";
+    const res = await api.get(`/payway/installments-options${query}`);
+    return res.data?.info?.installments || [1,2];
+  } catch (error) {
+    console.error("Error fetching installment options:", error);
+    return [1];
   }
 };
 

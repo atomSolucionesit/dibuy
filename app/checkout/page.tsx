@@ -9,7 +9,7 @@ import Footer from "@/components/Footer"
 import { useCart } from "@/contexts/CartContext"
 import { createSale, updateSale } from "@/api/sales/saleService"
 import { createCustomer } from "@/api/customers/customerService"
-import { createToken, createPayment, getPaymentStatus } from "@/services/payments"
+import { createToken, createPayment, getInstallmentOptions, getPaymentStatus } from "@/services/payments"
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
@@ -59,6 +59,8 @@ export default function CheckoutPage() {
   const [expYear, setExpYear] = useState("");
   const [construction, setConstruction] = useState(false);
   const [cvv, setCvv] = useState("");
+  const [installmentsOptions, setInstallmentsOptions] = useState<number[]>([1,2,3]);
+  const [selectedInstallments, setSelectedInstallments] = useState<number>(1);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -121,6 +123,15 @@ const handleCreateSale = async (e: React.FormEvent) => {
     });
 
       setSaleId(sale.info.id);
+      try {
+        const options = await getInstallmentOptions();
+        const normalized = Array.isArray(options) && options.length > 0 ? options : [1];
+        setInstallmentsOptions(normalized);
+        setSelectedInstallments(normalized[0]);
+      } catch (error) {
+        setInstallmentsOptions([1]);
+        setSelectedInstallments(1);
+      }
       setStep(2);
     } catch (err) {
       console.error(err);
@@ -159,6 +170,8 @@ const handleCreateSale = async (e: React.FormEvent) => {
         newTotal,
         saleId,
         saleId /*aca va el fignerprint*/,
+        undefined,
+        selectedInstallments,
       );
 
       // 3. Actualizar venta en backend
@@ -512,6 +525,24 @@ const handleCreateSale = async (e: React.FormEvent) => {
                           </div>
                         </div>
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Cuotas
+                      </label>
+                      <select
+                        value={selectedInstallments}
+                        onChange={(e) =>
+                          setSelectedInstallments(Number(e.target.value))
+                        }
+                        className="w-full bg-white text-black px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                      >
+                        {installmentsOptions.map((quota) => (
+                          <option key={quota} value={quota}>
+                            {quota} cuota{quota > 1 ? "s" : ""}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     {/* Payway Security Section */}
