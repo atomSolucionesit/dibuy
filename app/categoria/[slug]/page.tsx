@@ -130,14 +130,7 @@ export default function CategoryPage() {
                             </span>
                           )}
                         </div>
-                        {product.originalPrice && (
-                          <span className="text-sm text-green-600 font-medium">
-                            💰 Ahorrás{" "}
-                            {formatPrice(
-                              product.originalPrice - product.sellingPrice,
-                            )}
-                          </span>
-                        )}
+
                       </div>
 
                       <button

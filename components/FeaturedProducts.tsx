@@ -20,7 +20,7 @@ export default function FeaturedProducts() {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      const productsResponse = await ProductService.getProducts(1, 10);
+      const productsResponse = await ProductService.getProducts(1, 12);
       setProductos(productsResponse.data || []);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -101,14 +101,7 @@ export default function FeaturedProducts() {
                       </span>
                     )}
                   </div>
-                  {product.originalPrice && (
-                    <span className="text-sm text-green-600 font-medium">
-                      💰 Ahorrás{" "}
-                      {formatPrice(
-                        product.originalPrice - product.sellingPrice,
-                      )}
-                    </span>
-                  )}
+
                 </div>
 
                 <button

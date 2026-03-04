@@ -21,6 +21,7 @@ export interface Product {
   id: string;
   sku: string;
   name: string;
+  color: string;
   description: string;
   brand: string;
   price: number;
