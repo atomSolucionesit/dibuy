@@ -41,6 +41,50 @@ export interface Product {
   badge: string;
   outstandingDescription?: string;
   CategoryProduct: Category[];
+  published?: boolean;
+  hasVariants?: boolean;
+  variantGroups?: ProductVariantGroup[];
+  variants?: ProductVariant[];
+}
+
+export interface ProductVariantGroupOption {
+  id: string;
+  value: string;
+  displayLabel?: string | null;
+  colorHex?: string | null;
+  groupId: string;
+  name?: string;
+}
+
+export interface ProductVariantGroup {
+  id: string;
+  name: string;
+  displayOrder?: number;
+  options: ProductVariantGroupOption[];
+}
+
+export interface ProductVariantOptionLink {
+  groupId: string;
+  optionId: string;
+  group?: {
+    id: string;
+    name: string;
+  };
+  option?: {
+    id: string;
+    value: string;
+    displayLabel?: string | null;
+    colorHex?: string | null;
+  };
+}
+
+export interface ProductVariant {
+  id: string;
+  name: string;
+  sku?: string | null;
+  stock: number;
+  isActive?: boolean;
+  optionLinks?: ProductVariantOptionLink[];
 }
 
 export interface ProductFilters {

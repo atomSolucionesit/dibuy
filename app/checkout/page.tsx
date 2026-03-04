@@ -128,6 +128,8 @@ export default function CheckoutPage() {
             price: item.sellingPrice,
             discount: 0,
             selectedColor: item.selectedColor || null,
+            productVariantId: item.selectedVariantCombinationId || null,
+            productVariantName: item.selectedVariantName || null,
           })),
         };
 
@@ -198,6 +200,8 @@ export default function CheckoutPage() {
         price: item.sellingPrice,
         discount: 0,
         selectedColor: item.selectedColor || null,
+        productVariantId: item.selectedVariantCombinationId || null,
+        productVariantName: item.selectedVariantName || null,
       }));
 
       const sale = await createSale(salePayload);
@@ -822,6 +826,11 @@ export default function CheckoutPage() {
                           <p className="text-sm text-gray-500">
                             Cantidad: {item.quantity}
                           </p>
+                          {item.selectedVariantName && (
+                            <p className="text-sm text-gray-500">
+                              Variante: {item.selectedVariantName}
+                            </p>
+                          )}
                           {item.selectedColor && (
                             <p className="text-sm text-gray-500">
                               Color: {item.selectedColor}

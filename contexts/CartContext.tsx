@@ -8,6 +8,10 @@ export interface CartItem extends Product {
   quantity: number
   weight?: number
   selectedColor?: string
+  selectedVariantCombinationId?: string | null
+  selectedVariantName?: string | null
+  selectedVariantOptions?: Record<string, string> | null
+  cartItemKey: string
 }
 
 interface ShippingOption {
@@ -36,8 +40,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "ADD_ITEM": {
       const productWithColor = action.payload as Product & { selectedColor?: string }
       
-      // Buscar si existe el producto (con o sin color)
-      const existingItemIndex = state.items.findIndex((item) => item.id === productWithColor.id)
+      const incomingVariantId = (productWithColor as any).selectedVariantCombinationId || null
+      const incomingKey = `${productWithColor.id}::${incomingVariantId || "base"}`
+      const existingItemIndex = state.items.findIndex((item) => item.cartItemKey === incomingKey)
       
       if (existingItemIndex !== -1) {
         // Si existe, actualizar el item existente
@@ -46,7 +51,13 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
             return {
               ...item,
               quantity: item.quantity + 1,
-              selectedColor: productWithColor.selectedColor || item.selectedColor
+              selectedColor: productWithColor.selectedColor || item.selectedColor,
+              selectedVariantCombinationId:
+                (productWithColor as any).selectedVariantCombinationId ?? item.selectedVariantCombinationId ?? null,
+              selectedVariantName:
+                (productWithColor as any).selectedVariantName ?? item.selectedVariantName ?? null,
+              selectedVariantOptions:
+                (productWithColor as any).selectedVariantOptions ?? item.selectedVariantOptions ?? null,
             }
           }
           return item
@@ -58,7 +69,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         return { ...state, items: updatedItems, total, itemCount }
       } else {
         // Si no existe, crear nuevo item
-        const newItem = { ...productWithColor, quantity: 1 }
+        const newItem = { ...productWithColor, quantity: 1, cartItemKey: incomingKey } as CartItem
         const updatedItems = [...state.items, newItem]
         const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
@@ -68,7 +79,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     }
 
     case "REMOVE_ITEM": {
-      const updatedItems = state.items.filter((item) => item.id !== action.payload)
+      const updatedItems = state.items.filter((item) => item.cartItemKey !== action.payload)
       const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -78,7 +89,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "UPDATE_QUANTITY": {
       const updatedItems = state.items
         .map((item) =>
-          item.id === action.payload.id ? { ...item, quantity: Math.max(0, action.payload.quantity) } : item,
+          item.cartItemKey === action.payload.id ? { ...item, quantity: Math.max(0, action.payload.quantity) } : item,
         )
         .filter((item) => item.quantity > 0)
 
@@ -131,6 +142,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart)
+        if (Array.isArray(parsedCart?.items)) {
+          parsedCart.items = parsedCart.items.map((item: any) => {
+            const variantId = item?.selectedVariantCombinationId || null
+            return {
+              ...item,
+              cartItemKey: item?.cartItemKey || `${item.id}::${variantId || "base"}`,
+            }
+          })
+        }
         dispatch({ type: "LOAD_CART", payload: parsedCart })
       } catch (error) {
         console.error("Error loading cart from localStorage:", error)
