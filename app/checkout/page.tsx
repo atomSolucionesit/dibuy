@@ -10,6 +10,7 @@ import { useCart } from "@/contexts/CartContext"
 import { createSale, updateSale } from "@/api/sales/saleService"
 import { createCustomer } from "@/api/customers/customerService"
 import { createToken, createPayment, getInstallmentOptions, getPaymentStatus } from "@/services/payments"
+import { getPaymentMethodId } from "@/lib/cardUtils"
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
@@ -34,6 +35,8 @@ const shippingMethods = [
   { id: "premium", name: "Envío premium", price: 10000, time: "Mismo día" },
   { id: "branch", name: "Retiro en sucursal", price: 0, time: "Retirás en la sucursal" },
 ];
+
+const DEFAULT_INSTALLMENTS = [1, 3, 6, 9, 12];
 
 export default function CheckoutPage() {
   //const deviceFingerprintId = useDeviceFingerprint();
@@ -60,7 +63,7 @@ export default function CheckoutPage() {
   const [expYear, setExpYear] = useState("");
   const [construction, setConstruction] = useState(false);
   const [cvv, setCvv] = useState("");
-  const [installmentsOptions, setInstallmentsOptions] = useState<number[]>([1,2,3]);
+  const [installmentsOptions, setInstallmentsOptions] = useState<number[]>(DEFAULT_INSTALLMENTS);
   const [selectedInstallments, setSelectedInstallments] = useState<number>(1);
   // shipping map state
   const [lat, setLat] = useState<string | null>(null);
@@ -209,11 +212,15 @@ export default function CheckoutPage() {
       setSaleId(sale.info.id);
       try {
         const options = await getInstallmentOptions();
-        const normalized = Array.isArray(options) && options.length > 0 ? options : [1];
-        setInstallmentsOptions(normalized);
-        setSelectedInstallments(normalized[0]);
+        const normalized = (
+          Array.isArray(options) && options.length > 0 ? options : DEFAULT_INSTALLMENTS
+        ).filter((value) => DEFAULT_INSTALLMENTS.includes(Number(value)));
+
+        const finalOptions = normalized.length > 0 ? normalized : DEFAULT_INSTALLMENTS;
+        setInstallmentsOptions(finalOptions);
+        setSelectedInstallments(finalOptions[0]);
       } catch (error) {
-        setInstallmentsOptions([1]);
+        setInstallmentsOptions(DEFAULT_INSTALLMENTS);
         setSelectedInstallments(1);
       }
       setStep(2);
@@ -254,8 +261,9 @@ export default function CheckoutPage() {
         newTotal,
         saleId,
         saleId /*aca va el fignerprint*/,
-        undefined,
+        getPaymentMethodId(cardNumber),
         selectedInstallments,
+        cardNumber.replace(/\s/g, "").slice(0, 6),
       );
 
       // 3. Actualizar venta en backend
