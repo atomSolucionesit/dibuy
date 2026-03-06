@@ -1,6 +1,28 @@
 import { api } from "@/api";
 
 const PAYWAY_TOKEN_URL = "https://developers.decidir.com/api/v2/tokens";
+let paywayPublicConfigCache: { publicKey: string; companyId: string; env: string } | null = null;
+
+const getPaywayPublicConfig = async () => {
+  if (paywayPublicConfigCache) {
+    return paywayPublicConfigCache;
+  }
+
+  const res = await api.get("/payway/public-config");
+  const info = res?.data;
+
+  if (!info?.publicKey) {
+    throw new Error("No se encontró la configuración pública de Payway para esta compañía");
+  }
+
+  paywayPublicConfigCache = {
+    publicKey: info.publicKey,
+    companyId: String(info.companyId || ""),
+    env: String(info.env || "developer"),
+  };
+
+  return paywayPublicConfigCache;
+};
 
 /**
  * Generar token de tarjeta con la publicKey de Payway.
@@ -15,10 +37,11 @@ export const createToken = async (cardData: {
   card_holder_identification: { type: string; number: string };
 }) => {
   try {
+    const config = await getPaywayPublicConfig();
     const res = await fetch(PAYWAY_TOKEN_URL, {
       method: "POST",
       headers: {
-        apikey: process.env.NEXT_PUBLIC_PAYWAY_PUBLIC_KEY as string,
+        apikey: config.publicKey,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(cardData),

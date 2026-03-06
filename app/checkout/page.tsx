@@ -247,7 +247,7 @@ export default function CheckoutPage() {
       const token = tokenData.id;
 
       // 2. Crear pago
-      const newTotal = Math.round(total * 100);
+      const newTotal = total;
 
       const payment: any = await createPayment(
         token,
