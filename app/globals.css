@@ -123,3 +123,24 @@
 .categories-scroll::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(90deg, #ad1457, #303f9f);
 }
+
+/* Topbar marquee */
+.topbar-marquee {
+  overflow: hidden;
+}
+
+.topbar-marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.topbar-marquee-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4rem;
+  padding: 0 2rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
