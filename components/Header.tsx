@@ -1,20 +1,25 @@
 ﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Search, ShoppingCart, Menu, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useCategoryStore } from "@/store/categories";
-import SearchModal from "@/components/SearchModal";
 import { useHero } from "@/contexts/HeroContext";
+import { ProductService } from "@/services/productService";
+import { Product } from "@/types/api";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const marqueeTrackRef = useRef<HTMLDivElement | null>(null);
   const marqueeGroupRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
 
   const { state } = useCart();
   const pathname = usePathname();
@@ -55,6 +60,14 @@ export default function Header() {
 
   const bannerColors = getBannerColors();
   const isCartPage = pathname === "/carrito" || pathname === "/checkout";
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
 
   const messages = [
     "✈️ Envíos a todo el país",
@@ -123,6 +136,43 @@ export default function Header() {
     };
   }, [isCartPage]);
 
+  useEffect(() => {
+    const onClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const clickedInsideSearch = Boolean(
+        target?.closest('[data-search-scope="true"]')
+      );
+      if (!clickedInsideSearch) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    const debounce = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const data = await ProductService.searchProducts(searchQuery.trim());
+        const products = Array.isArray(data) ? data : [];
+        setSearchResults(products.slice(0, 8));
+      } catch (error) {
+        console.error("Error searching products:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(debounce);
+  }, [searchQuery]);
+
   return (
     <header className="bg-blanco shadow-sm sticky top-0 z-50 border-b border-gray-100">
       {!isCartPage && (
@@ -156,26 +206,77 @@ export default function Header() {
 
           {!isCartPage && (
             <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-              <div className="relative w-full">
+              <div className="relative w-full" data-search-scope="true">
                 <input
                   type="text"
                   placeholder="Buscar productos tecnológicos..."
-                  className="input-primary w-full pr-12 py-2 bg-gray-200 text-white cursor-pointer"
-                  onClick={() => setIsSearchModalOpen(true)}
-                  readOnly
+                  value={searchQuery}
+                  onFocus={() => setIsSearchOpen(true)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setIsSearchOpen(true);
+                  }}
+                  className="input-primary w-full pr-12 py-2 bg-gray-200 text-negro"
                 />
                 <button
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-magenta transition-colors"
-                  onClick={() => setIsSearchModalOpen(true)}
+                  onClick={() => setIsSearchOpen(true)}
                 >
                   <Search className="h-4 w-4" />
                 </button>
+
+                {isSearchOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-[420px] overflow-y-auto">
+                    {searchQuery.trim().length < 2 ? (
+                      <div className="p-4 text-sm text-gray-500">
+                        Escribí al menos 2 caracteres para buscar productos
+                      </div>
+                    ) : isSearching ? (
+                      <div className="p-4 text-sm text-gray-500">Buscando...</div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="p-4 text-sm text-gray-500">
+                        No se encontraron productos
+                      </div>
+                    ) : (
+                      <div className="py-2">
+                        {searchResults.map((product) => (
+                          <button
+                            key={product.id}
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              setSearchQuery("");
+                              router.push(`/producto/${product.id}`);
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                          >
+                            <Image
+                              src={product.images?.[0]?.url || "/placeholder.svg"}
+                              alt={product.name}
+                              width={48}
+                              height={48}
+                              className="rounded-lg object-contain bg-gray-100 flex-shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <p className="text-sm text-negro truncate">{product.name}</p>
+                              <p className="text-sm font-semibold text-magenta">
+                                {formatPrice(product.sellingPrice)}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           <div className="flex items-center space-x-4">
-            <button className="md:hidden hover:text-magenta transition-colors" onClick={() => setIsSearchModalOpen(true)}>
+            <button
+              className="md:hidden hover:text-magenta transition-colors"
+              onClick={() => setIsSearchOpen((prev) => !prev)}
+            >
               <Search className="h-5 w-5" />
             </button>
 
@@ -219,6 +320,74 @@ export default function Header() {
         )}
 
         {!isCartPage && (
+          <div className="md:hidden pb-3">
+            <div className="relative" data-search-scope="true">
+              <input
+                type="text"
+                placeholder="Buscar productos tecnológicos..."
+                value={searchQuery}
+                onFocus={() => setIsSearchOpen(true)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchOpen(true);
+                }}
+                className="input-primary w-full pr-12 py-2 bg-gray-200 text-negro"
+              />
+              <button
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-magenta transition-colors"
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <Search className="h-4 w-4" />
+              </button>
+            </div>
+
+            {isSearchOpen && (
+              <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-[320px] overflow-y-auto">
+                {searchQuery.trim().length < 2 ? (
+                  <div className="p-4 text-sm text-gray-500">
+                    Escribí al menos 2 caracteres para buscar productos
+                  </div>
+                ) : isSearching ? (
+                  <div className="p-4 text-sm text-gray-500">Buscando...</div>
+                ) : searchResults.length === 0 ? (
+                  <div className="p-4 text-sm text-gray-500">
+                    No se encontraron productos
+                  </div>
+                ) : (
+                  <div className="py-2">
+                    {searchResults.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => {
+                          setIsSearchOpen(false);
+                          setSearchQuery("");
+                          router.push(`/producto/${product.id}`);
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                      >
+                        <Image
+                          src={product.images?.[0]?.url || "/placeholder.svg"}
+                          alt={product.name}
+                          width={44}
+                          height={44}
+                          className="rounded-lg object-contain bg-gray-100 flex-shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-sm text-negro truncate">{product.name}</p>
+                          <p className="text-sm font-semibold text-magenta">
+                            {formatPrice(product.sellingPrice)}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isCartPage && (
           <nav className={`${isMenuOpen ? "block" : "hidden"} md:hidden border-t border-gray-100`}>
             <div className="py-2">
               <Link
@@ -232,7 +401,6 @@ export default function Header() {
         )}
       </div>
 
-      <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
     </header>
   );
 }
