@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -23,12 +23,15 @@ import {
   createPayment,
   getPaymentStatus,
 } from "@/services/payments";
+import { createModoCheckout } from "@/services/modo";
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
   { id: "credit", name: "Tarjeta de crédito", icon: CreditCard },
   { id: "debit", name: "Tarjeta de débito", icon: CreditCard },
   { id: "transfer", name: "Transferencia bancaria", icon: CreditCard },
+  // label follows MODO guidelines ("MODO y Apps Bancarias")
+  { id: "modo", name: "MODO y Apps Bancarias", icon: CreditCard },
 ];
 
 const shippingMethods = [
@@ -45,7 +48,12 @@ const shippingMethods = [
     time: "1-2 días hábiles",
   },
   { id: "premium", name: "Envío premium", price: 10000, time: "Mismo día" },
-  { id: "branch", name: "Retiro en sucursal", price: 0, time: "Retirás en la sucursal" },
+  {
+    id: "branch",
+    name: "Retiro en sucursal",
+    price: 0,
+    time: "Retirás en la sucursal",
+  },
 ];
 
 export default function CheckoutPage() {
@@ -78,6 +86,66 @@ export default function CheckoutPage() {
   const [lng, setLng] = useState<string | null>(null);
   const [mapUrl, setMapUrl] = useState<string | null>(null);
   const [isSearchingMap, setIsSearchingMap] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // MODO payment integration
+  useEffect(() => {
+    const script = document.createElement("script");
+    const src =
+      process.env.NODE_ENV === "production"
+        ? "https://ecommerce-modal.modo.com.ar/bundle.js"
+        : "https://ecommerce-modal.preprod.modo.com.ar/bundle.js";
+    script.src = src;
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const createPaymentIntention = async () => {
+    // use the central service rather than a fetch to the frontend
+    const json = await createModoCheckout(total);
+    return {
+      checkoutId: json.id,
+      qrString: json.qr,
+      deeplink: json.deeplink,
+    };
+  };
+
+  const showModal = async () => {
+    console.log("Modo script env", process.env.NODE_ENV === "production" ? "prod" : "preprod");
+    const modalData = await createPaymentIntention();
+    const modalObject: any = {
+      version: "2",
+      qrString: modalData.qrString,
+      checkoutId: modalData.checkoutId,
+      deeplink: {
+        url: modalData.deeplink,
+        callbackURL: window.location.href,
+        callbackURLSuccess: window.location.origin + "/payment/success",
+      },
+      callbackURL: window.location.origin + "/payment/success",
+      refreshData: createPaymentIntention,
+      onSuccess: () => {
+        console.log("modo success");
+        router.push("/payment/success");
+      },
+      onFailure: () => {
+        console.log("modo failure");
+        router.push("/payment/failure");
+      },
+    };
+    // @ts-ignore
+    window.ModoSDK?.modoInitPayment(modalObject);
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -94,6 +162,9 @@ export default function CheckoutPage() {
   const shipping = selectedShipping?.price || 0;
   const envio = state.shipping;
   const total = subtotal + (envio?.price || 0);
+
+  // textos específicos para MODO
+  const modoCta = "REALIZAR PAGO";
 
   // Paso 1: personal info submit -> avanzar a envío
   const handlePersonalSubmit = async (e: React.FormEvent) => {
@@ -224,6 +295,10 @@ export default function CheckoutPage() {
   // Paso 2: procesar pago
   const handleProcessPayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    // if the user selected MODO we shouldn't handle here
+    if (formData.paymentMethod === "modo") {
+      return;
+    }
     if (!saleId) {
       console.error("Sale ID no disponible");
       return;
@@ -466,7 +541,10 @@ export default function CheckoutPage() {
                           required
                           value={formData.shippingMethod}
                           onChange={(e) =>
-                            setFormData({ ...formData, shippingMethod: e.target.value })
+                            setFormData({
+                              ...formData,
+                              shippingMethod: e.target.value,
+                            })
                           }
                           className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                         >
@@ -634,254 +712,327 @@ export default function CheckoutPage() {
 
                 {/* Step 3: Payment */}
                 {step === 3 && (
-                  <form
-                    onSubmit={handleProcessPayment}
-                    className="space-y-6 bg-white rounded-xl p-6 shadow-sm"
-                  >
-                    <h2 className="text-xl font-bold mb-6">Datos de tarjeta</h2>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Número de tarjeta
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={cardNumber}
-                          onChange={(e) =>
-                            setCardNumber(
-                              e.target.value.replace(/\D/g, "").slice(0, 16),
-                            )
-                          }
-                          className="w-full pl-12 pr-4 py-3 bg-white text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                          placeholder="•••• •••• •••• ••••"
-                          pattern="\d{16}"
-                          maxLength={16}
-                          required
-                          autoComplete="cc-number"
-                        />
-                        <CreditCard className="absolute left-4 top-3 h-5 w-5 text-gray-400" />
-                      </div>
+                  <div className="space-y-6 bg-white rounded-xl p-6 shadow-sm">
+                    <h2 className="text-xl font-bold mb-6">Pago</h2>
+                    {/* método de pago */}
+                    <div className="space-y-2">
+                      {paymentMethods.map((m) => (
+                        <label key={m.id} className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value={m.id}
+                            checked={formData.paymentMethod === m.id}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                paymentMethod: e.target.value,
+                              })
+                            }
+                          />
+                          {m.id === "modo" ? (
+                            <div className="flex items-center gap-1">
+                              <Image
+                                src="/modo/Logo_modo.svg"
+                                alt="MODO"
+                                width={24}
+                                height={24}
+                                className="inline-block"
+                              />
+                              <span>{m.name}</span>
+                            </div>
+                          ) : (
+                            m.name
+                          )}
+                        </label>
+                      ))}
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-1">
-                        <label className="block text-sm font-medium mb-2">
-                          Mes
-                        </label>
-                        <select
-                          value={expMonth}
-                          onChange={(e) => setExpMonth(e.target.value)}
-                          className="w-full bg-white text-black px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                          required
+                    {formData.paymentMethod === "modo" ? (
+                      <>
+                        <div className="mb-4 p-4 bg-gray-100 rounded-md text-sm">
+                          {isMobile
+                            ? "Al avanzar con el pago seleccioná la app de tu banco"
+                            : "Al avanzar con el pago escaneá el QR con la app de tu banco"}
+                        </div>
+                        <div className="pt-6">
+                          <button
+                            type="button"
+                            onClick={showModal}
+                            className="w-full bg-magenta text-white py-4 rounded-lg font-medium hover:opacity-90 transition-colors duration-200"
+                          >
+                            {modoCta}
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <form
+                        onSubmit={handleProcessPayment}
+                        className="space-y-6"
+                      >
+                        <h2 className="text-xl font-bold mb-6">
+                          Datos de tarjeta
+                        </h2>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Número de tarjeta
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={cardNumber}
+                              onChange={(e) =>
+                                setCardNumber(
+                                  e.target.value
+                                    .replace(/\D/g, "")
+                                    .slice(0, 16),
+                                )
+                              }
+                              className="w-full pl-12 pr-4 py-3 bg-white text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                              placeholder="•••• •••• •••• ••••"
+                              pattern="\d{16}"
+                              maxLength={16}
+                              required
+                              autoComplete="cc-number"
+                            />
+                            <CreditCard className="absolute left-4 top-3 h-5 w-5 text-gray-400" />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="col-span-1">
+                            <label className="block text-sm font-medium mb-2">
+                              Mes
+                            </label>
+                            <select
+                              value={expMonth}
+                              onChange={(e) => setExpMonth(e.target.value)}
+                              className="w-full bg-white text-black px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                              required
+                            >
+                              <option value="">MM</option>
+                              {Array.from({ length: 12 }, (_, i) => {
+                                const month = (i + 1)
+                                  .toString()
+                                  .padStart(2, "0");
+                                return (
+                                  <option key={month} value={month}>
+                                    {month}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                          <div className="col-span-1">
+                            <label className="block text-sm font-medium mb-2">
+                              Año
+                            </label>
+                            <select
+                              value={expYear}
+                              onChange={(e) => setExpYear(e.target.value)}
+                              className="w-full bg-white text-black px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                              required
+                            >
+                              <option value="">YY</option>
+                              {Array.from({ length: 10 }, (_, i) => {
+                                const year = (new Date().getFullYear() + i)
+                                  .toString()
+                                  .slice(-2);
+                                return (
+                                  <option key={year} value={year}>
+                                    {year}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                          <div className="col-span-1">
+                            <label className="block text-sm font-medium mb-2">
+                              CVV
+                              <span className="ml-1 text-gray-400 text-xs">
+                                (3 dígitos)
+                              </span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="password"
+                                value={cvv}
+                                onChange={(e) =>
+                                  setCvv(
+                                    e.target.value
+                                      .replace(/\D/g, "")
+                                      .slice(0, 3),
+                                  )
+                                }
+                                className="w-full bg-white text-black px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                                pattern="\d{3}"
+                                maxLength={3}
+                                required
+                                autoComplete="cc-csc"
+                              />
+                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <Shield className="h-4 w-4 text-gray-400" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Payway Security Section */}
+                        <div className="bg-gray-50 p-6 rounded-lg border mt-8">
+                          <div className="flex items-center justify-center mb-4">
+                            <Image
+                              src="https://cdn.atomsolucionesit.com.ar/media/dibuy/payway.svg"
+                              alt="Payway - Procesamiento seguro"
+                              width={140}
+                              height={50}
+                              className="h-10 w-auto"
+                            />
+                          </div>
+                          <div className="flex items-center justify-center gap-2 mb-3">
+                            <Shield className="h-4 w-4 text-green-600" />
+                            <p className="text-sm text-gray-600">
+                              Tus datos están protegidos con encriptación SSL
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <a
+                              href="https://cdn.atomsolucionesit.com.ar/media/dibuy/Declaraci%C3%B3n%20sobre%20el%20uso%20de%20medios%20de%20pago%20y%20procesamiento%20de%20transacciones.pdf"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary hover:text-primary-dark underline"
+                            >
+                              Ver declaración de procesamiento de pagos
+                            </a>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="w-full bg-primary text-white py-4 rounded-lg font-medium hover:bg-primary-dark transition-colors duration-200 mt-6 flex items-center justify-center gap-2"
                         >
-                          <option value="">MM</option>
-                          {Array.from({ length: 12 }, (_, i) => {
-                            const month = (i + 1).toString().padStart(2, "0");
-                            return (
-                              <option key={month} value={month}>
-                                {month}
-                              </option>
-                            );
-                          })}
-                        </select>
+                          <CreditCard className="h-5 w-5" />
+                          <span>Confirmar pago seguro</span>
+                        </button>
+                      </form>
+                    )}
+
+                    {/* Order Summary */}
+                    <div className="space-y-6">
+                      <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h2 className="text-xl font-bold mb-4">
+                          Resumen del pedido
+                        </h2>
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <Shield className="h-4 w-4 text-green-600" />
+                          <p className="text-sm text-gray-600">
+                            Tus datos están protegidos con encriptación SSL
+                          </p>
+                        </div>
+                        {/* Cart Items */}
+                        <div className="space-y-4 mb-6">
+                          {state.items.map((item) => (
+                            <div key={item.id} className="flex gap-4">
+                              <Image
+                                src={item.images[0]?.url || "/placeholder.svg"}
+                                alt={item.name}
+                                width={60}
+                                height={60}
+                                className="w-15 h-15 object-cover rounded-lg bg-gray-100"
+                              />
+                              <div className="flex-1">
+                                <h3 className="font-medium text-sm">
+                                  {item.name}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  Cantidad: {item.quantity}
+                                </p>
+                                {item.selectedColor && (
+                                  <p className="text-sm text-gray-500">
+                                    Color: {item.selectedColor}
+                                  </p>
+                                )}
+                                <p className="text-sm font-medium">
+                                  {formatPrice(item.sellingPrice)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Totals */}
+                        <div className="space-y-3 border-t pt-4">
+                          <div className="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span>{formatPrice(subtotal)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Envío:</span>
+                            <span>
+                              {envio
+                                ? `${envio.name} - ${formatPrice(envio.price)}`
+                                : "-"}
+                            </span>
+                          </div>
+                          <div className="border-t pt-3">
+                            <div className="flex justify-between font-bold text-lg">
+                              <span>Total:</span>
+                              <span className="text-primary">
+                                {formatPrice(total)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="col-span-1">
-                        <label className="block text-sm font-medium mb-2">
-                          Año
-                        </label>
-                        <select
-                          value={expYear}
-                          onChange={(e) => setExpYear(e.target.value)}
-                          className="w-full bg-white text-black px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                          required
-                        >
-                          <option value="">YY</option>
-                          {Array.from({ length: 10 }, (_, i) => {
-                            const year = (new Date().getFullYear() + i)
-                              .toString()
-                              .slice(-2);
-                            return (
-                              <option key={year} value={year}>
-                                {year}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </div>
-                      <div className="col-span-1">
-                        <label className="block text-sm font-medium mb-2">
-                          CVV
-                          <span className="ml-1 text-gray-400 text-xs">
-                            (3 dígitos)
-                          </span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="password"
-                            value={cvv}
-                            onChange={(e) =>
-                              setCvv(
-                                e.target.value.replace(/\D/g, "").slice(0, 3),
-                              )
-                            }
-                            className="w-full bg-white text-black px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                            pattern="\d{3}"
-                            maxLength={3}
-                            required
-                            autoComplete="cc-csc"
-                          />
-                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                            <Shield className="h-4 w-4 text-gray-400" />
+
+                      {/* Benefits */}
+                      <div className="bg-white rounded-xl p-6 shadow-sm">
+                        <h3 className="font-semibold mb-4">
+                          Beneficios de tu compra
+                        </h3>
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3">
+                            <Truck className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="font-medium text-sm">
+                                Envío seguro
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Seguimiento en tiempo real
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Shield className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="font-medium text-sm">
+                                Garantía oficial
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                12 meses de garantía
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <RotateCcw className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="font-medium text-sm">
+                                Devolución gratuita
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Hasta 30 días
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-
-                    {/* Payway Security Section */}
-                    <div className="bg-gray-50 p-6 rounded-lg border mt-8">
-                      <div className="flex items-center justify-center mb-4">
-                        <Image
-                          src="https://cdn.atomsolucionesit.com.ar/media/dibuy/payway.svg"
-                          alt="Payway - Procesamiento seguro"
-                          width={140}
-                          height={50}
-                          className="h-10 w-auto"
-                        />
-                      </div>
-                      <div className="flex items-center justify-center gap-2 mb-3">
-                        <Shield className="h-4 w-4 text-green-600" />
-                        <p className="text-sm text-gray-600">
-                          Tus datos están protegidos con encriptación SSL
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <a
-                          href="https://cdn.atomsolucionesit.com.ar/media/dibuy/Declaraci%C3%B3n%20sobre%20el%20uso%20de%20medios%20de%20pago%20y%20procesamiento%20de%20transacciones.pdf"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:text-primary-dark underline"
-                        >
-                          Ver declaración de procesamiento de pagos
-                        </a>
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="w-full bg-primary text-white py-4 rounded-lg font-medium hover:bg-primary-dark transition-colors duration-200 mt-6 flex items-center justify-center gap-2"
-                    >
-                      <CreditCard className="h-5 w-5" />
-                      <span>Confirmar pago seguro</span>
-                    </button>
-                  </form>
+                    <Footer />
+                  </div>
                 )}
-              </div>
-
-              {/* Order Summary */}
-              <div className="space-y-6">
-                <div className="bg-white rounded-xl p-6 shadow-sm">
-                  <h2 className="text-xl font-bold mb-4">Resumen del pedido</h2>
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    <Shield className="h-4 w-4 text-green-600" />
-                    <p className="text-sm text-gray-600">
-                      Tus datos están protegidos con encriptación SSL
-                    </p>
-                  </div>
-                  {/* Cart Items */}
-                  <div className="space-y-4 mb-6">
-                    {state.items.map((item) => (
-                      <div key={item.id} className="flex gap-4">
-                        <Image
-                          src={item.images[0]?.url || "/placeholder.svg"}
-                          alt={item.name}
-                          width={60}
-                          height={60}
-                          className="w-15 h-15 object-cover rounded-lg bg-gray-100"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-medium text-sm">{item.name}</h3>
-                          <p className="text-sm text-gray-500">
-                            Cantidad: {item.quantity}
-                          </p>
-                          {item.selectedColor && (
-                            <p className="text-sm text-gray-500">
-                              Color: {item.selectedColor}
-                            </p>
-                          )}
-                          <p className="text-sm font-medium">
-                            {formatPrice(item.sellingPrice)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Totals */}
-                  <div className="space-y-3 border-t pt-4">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span>{formatPrice(subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Envío:</span>
-                      <span>
-                        {envio
-                          ? `${envio.name} - ${formatPrice(envio.price)}`
-                          : "-"}
-                      </span>
-                    </div>
-                    <div className="border-t pt-3">
-                      <div className="flex justify-between font-bold text-lg">
-                        <span>Total:</span>
-                        <span className="text-primary">
-                          {formatPrice(total)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Benefits */}
-                <div className="bg-white rounded-xl p-6 shadow-sm">
-                  <h3 className="font-semibold mb-4">
-                    Beneficios de tu compra
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <Truck className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-medium text-sm">Envío seguro</p>
-                        <p className="text-xs text-gray-500">
-                          Seguimiento en tiempo real
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Shield className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-medium text-sm">Garantía oficial</p>
-                        <p className="text-xs text-gray-500">
-                          12 meses de garantía
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <RotateCcw className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="font-medium text-sm">
-                          Devolución gratuita
-                        </p>
-                        <p className="text-xs text-gray-500">Hasta 30 días</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
-
-          <Footer />
         </>
       )}
     </div>
