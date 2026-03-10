@@ -24,6 +24,31 @@ import {
   getPaymentStatus,
 } from "@/services/payments";
 import { createModoCheckout } from "@/services/modo";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  Minus,
+  Plus,
+  Trash2,
+  CreditCard,
+  Truck,
+  Shield,
+  RotateCcw,
+  CheckCircle,
+} from "lucide-react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useCart } from "@/contexts/CartContext";
+import { createSale, updateSale } from "@/api/sales/saleService";
+import { createCustomer } from "@/api/customers/customerService";
+import {
+  createToken,
+  createPayment,
+  getInstallmentOptions,
+  getPaymentStatus,
+} from "@/services/payments";
+import { getPaymentMethodId } from "@/lib/cardUtils";
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
@@ -56,6 +81,8 @@ const shippingMethods = [
   },
 ];
 
+const DEFAULT_INSTALLMENTS = [1, 3, 6, 9, 12];
+
 export default function CheckoutPage() {
   //const deviceFingerprintId = useDeviceFingerprint();
   const router = useRouter();
@@ -81,6 +108,9 @@ export default function CheckoutPage() {
   const [expYear, setExpYear] = useState("");
   const [construction, setConstruction] = useState(false);
   const [cvv, setCvv] = useState("");
+  const [installmentsOptions, setInstallmentsOptions] =
+    useState<number[]>(DEFAULT_INSTALLMENTS);
+  const [selectedInstallments, setSelectedInstallments] = useState<number>(1);
   // shipping map state
   const [lat, setLat] = useState<string | null>(null);
   const [lng, setLng] = useState<string | null>(null);
@@ -121,7 +151,10 @@ export default function CheckoutPage() {
   };
 
   const showModal = async () => {
-    console.log("Modo script env", process.env.NODE_ENV === "production" ? "prod" : "preprod");
+    console.log(
+      "Modo script env",
+      process.env.NODE_ENV === "production" ? "prod" : "preprod",
+    );
     const modalData = await createPaymentIntention();
     const modalObject: any = {
       version: "2",
@@ -210,6 +243,8 @@ export default function CheckoutPage() {
             price: item.sellingPrice,
             discount: 0,
             selectedColor: item.selectedColor || null,
+            productVariantId: item.selectedVariantCombinationId || null,
+            productVariantName: item.selectedVariantName || null,
           })),
         };
 
@@ -280,12 +315,30 @@ export default function CheckoutPage() {
         price: item.sellingPrice,
         discount: 0,
         selectedColor: item.selectedColor || null,
+        productVariantId: item.selectedVariantCombinationId || null,
+        productVariantName: item.selectedVariantName || null,
       }));
 
       const sale = await createSale(salePayload);
 
       setSaleId(sale.info.id);
-      setStep(3);
+      try {
+        const options = await getInstallmentOptions();
+        const normalized = (
+          Array.isArray(options) && options.length > 0
+            ? options
+            : DEFAULT_INSTALLMENTS
+        ).filter((value) => DEFAULT_INSTALLMENTS.includes(Number(value)));
+
+        const finalOptions =
+          normalized.length > 0 ? normalized : DEFAULT_INSTALLMENTS;
+        setInstallmentsOptions(finalOptions);
+        setSelectedInstallments(finalOptions[0]);
+      } catch (error) {
+        setInstallmentsOptions(DEFAULT_INSTALLMENTS);
+        setSelectedInstallments(1);
+      }
+      setStep(2);
     } catch (err) {
       console.error(err);
       alert("Error al crear la venta");
@@ -320,13 +373,16 @@ export default function CheckoutPage() {
       const token = tokenData.id;
 
       // 2. Crear pago
-      const newTotal = Math.round(total * 100);
+      const newTotal = total;
 
       const payment: any = await createPayment(
         token,
         newTotal,
         saleId,
         saleId /*aca va el fignerprint*/,
+        getPaymentMethodId(cardNumber),
+        selectedInstallments,
+        cardNumber.replace(/\s/g, "").slice(0, 6),
       );
 
       // 3. Actualizar venta en backend
@@ -877,6 +933,24 @@ export default function CheckoutPage() {
                             </div>
                           </div>
                         </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Cuotas
+                          </label>
+                          <select
+                            value={selectedInstallments}
+                            onChange={(e) =>
+                              setSelectedInstallments(Number(e.target.value))
+                            }
+                            className="w-full bg-white text-black px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                          >
+                            {installmentsOptions.map((quota) => (
+                              <option key={quota} value={quota}>
+                                {quota} cuota{quota > 1 ? "s" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
                         {/* Payway Security Section */}
                         <div className="bg-gray-50 p-6 rounded-lg border mt-8">
@@ -947,6 +1021,11 @@ export default function CheckoutPage() {
                                 <p className="text-sm text-gray-500">
                                   Cantidad: {item.quantity}
                                 </p>
+                                {item.selectedVariantName && (
+                                  <p className="text-sm text-gray-500">
+                                    Variante: {item.selectedVariantName}
+                                  </p>
+                                )}
                                 {item.selectedColor && (
                                   <p className="text-sm text-gray-500">
                                     Color: {item.selectedColor}

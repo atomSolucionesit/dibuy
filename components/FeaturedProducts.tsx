@@ -124,10 +124,9 @@ export default function FeaturedProducts() {
         <div className="text-center mt-12">
           <Link
             href="/productos"
-            className="group relative overflow-hidden border-2 border-magenta text-magenta px-8 py-4 rounded-lg font-medium hover:bg-magenta hover:text-blanco transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+            className="group relative overflow-hidden border-2 border-magenta bg-magenta text-blanco px-8 py-4 rounded-lg font-medium hover:hover-zafiro transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105 active:scale-95"
           >
             <span className="relative z-10">📦 Ver todos los productos</span>
-            <div className="absolute inset-0 bg-magenta -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
           </Link>
         </div>
       </div>

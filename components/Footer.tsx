@@ -20,17 +20,11 @@ export default function Footer() {
               Tu tienda de tecnología de confianza. Productos de calidad con la mejor atención al cliente.
             </p>
             <div className="flex space-x-4">
-              <Link href="#" className="hover:text-magenta transition-colors p-2 bg-gray-800 rounded-full hover:bg-magenta/20">
+              <Link href="https://www.facebook.com/dibuy.ar/" className="hover:text-magenta transition-colors p-2 bg-gray-800 rounded-full hover:bg-magenta/20" target="_blank">
                 <Facebook className="h-5 w-5" />
               </Link>
-              <Link href="#" className="hover:text-magenta transition-colors p-2 bg-gray-800 rounded-full hover:bg-magenta/20">
+              <Link href="https://www.instagram.com/dibuy.ar/" className="hover:text-magenta transition-colors p-2 bg-gray-800 rounded-full hover:bg-magenta/20" target="_blank">
                 <Instagram className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="hover:text-zafiro transition-colors p-2 bg-gray-800 rounded-full hover:bg-zafiro/20">
-                <Twitter className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="hover:text-oro transition-colors p-2 bg-gray-800 rounded-full hover:bg-oro/20">
-                <Youtube className="h-5 w-5" />
               </Link>
             </div>
           </div>

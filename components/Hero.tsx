@@ -35,11 +35,12 @@ export default function Hero() {
   const [currentSlide, setCurrentSlide] = useState(1); // Start at 1 (first real slide after clone)
   const [isPlaying, setIsPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isTransitionEnabled, setIsTransitionEnabled] = useState(true);
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isInfiniteJump, setIsInfiniteJump] = useState(false); // Flag for silent resets
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const slidesRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const transitionResetRafRef = useRef<number | null>(null);
 
   // list of banner filenames; actual path determined by `isMobile` state
   const banners = [
@@ -79,70 +80,67 @@ export default function Hero() {
     setLoading(false);
   }, [isMobile]);
 
-  // Handle infinite carousel reset at edges
   useEffect(() => {
-    if (slides.length === 0) return;
-
-    if (currentSlide === 0) {
-      // Jumped to clone of last slide, reset to real last slide
-      setIsInfiniteJump(true);
-      setTimeout(() => {
-        setCurrentSlide(slides.length);
-        setIsInfiniteJump(false);
-      }, 500);
-    } else if (currentSlide === slides.length + 1) {
-      // Jumped to clone of first slide, reset to real first slide
-      setIsInfiniteJump(true);
-      setTimeout(() => {
-        setCurrentSlide(1);
-        setIsInfiniteJump(false);
-      }, 500);
-    }
-  }, [currentSlide, slides.length]);
+    return () => {
+      if (transitionResetRafRef.current !== null) {
+        cancelAnimationFrame(transitionResetRafRef.current);
+      }
+    };
+  }, []);
 
   // Auto-play functionality
   useEffect(() => {
-    if (!isPlaying || isInfiniteJump || slides.length === 0) return;
+    if (
+      !isPlaying ||
+      slides.length === 0 ||
+      isTransitioning ||
+      !isTransitionEnabled
+    )
+      return;
 
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => prev + 1);
+      setCurrentSlide((prev) => Math.min(prev + 1, slides.length + 1));
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isPlaying, isInfiniteJump, slides.length]);
+  }, [isPlaying, slides.length, isTransitioning, isTransitionEnabled]);
 
   const goToSlide = (index: number) => {
     // index is 0-based for real slides, convert to cloned array index (add 1)
     if (isTransitioning || slides.length === 0) return;
+    const targetSlide = index + 1;
+    if (targetSlide === currentSlide) return;
     setIsTransitioning(true);
-    setCurrentSlide(index + 1); // +1 because array has clone at start
+    setIsTransitionEnabled(true);
+    setCurrentSlide(targetSlide); // +1 because array has clone at start
     setContextSlide(index);
     if (slides[index]) setCurrentGradient(slides[index].gradient);
-    setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const nextSlide = () => {
     if (isTransitioning || slides.length === 0) return;
+    if (currentSlide >= slides.length + 1) return;
     setIsTransitioning(true);
-    const nextIndex = currentSlide + 1;
+    setIsTransitionEnabled(true);
+    const nextIndex = Math.min(currentSlide + 1, slides.length + 1);
     setCurrentSlide(nextIndex);
     // For context, use real index (0-based)
     const realIndex = (nextIndex - 1) % slides.length;
     setContextSlide(realIndex);
     if (slides[realIndex]) setCurrentGradient(slides[realIndex].gradient);
-    setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const prevSlide = () => {
     if (isTransitioning || slides.length === 0) return;
+    if (currentSlide <= 0) return;
     setIsTransitioning(true);
-    const prevIndex = currentSlide - 1;
+    setIsTransitionEnabled(true);
+    const prevIndex = Math.max(currentSlide - 1, 0);
     setCurrentSlide(prevIndex);
     // For context, use real index (0-based)
     const realIndex = prevIndex === 0 ? slides.length - 1 : prevIndex - 1;
     setContextSlide(realIndex);
     if (slides[realIndex]) setCurrentGradient(slides[realIndex].gradient);
-    setTimeout(() => setIsTransitioning(false), 500);
   };
 
   const togglePlayPause = () => {
@@ -169,7 +167,8 @@ export default function Hero() {
 
   // decide container appearance based on device
   const sliderContainerClasses = `relative w-full overflow-hidden bg-black ${isMobile ? 'h-auto' : ''}`;
-  const slideWrapperClasses = `relative w-full ${isMobile ? 'h-auto' : 'aspect-[1920/500]'} flex ${!isInfiniteJump ? 'transition-transform duration-500 ease-in-out' : ''}`;
+  const slideWrapperClasses = `relative w-full ${isMobile ? 'h-auto' : 'aspect-[1920/500]'} flex ${isTransitionEnabled ? 'transition-transform duration-500 ease-in-out' : ''}`;
+  const currentRealSlide = (((currentSlide - 1 + slides.length) % slides.length) + 1);
 
   return (
     <section className="relative w-full">
@@ -178,6 +177,32 @@ export default function Hero() {
         <div
           ref={sliderRef}
           className={slideWrapperClasses}
+          onTransitionEnd={() => {
+            if (slides.length === 0) return;
+            if (currentSlide === 0) {
+              setIsTransitionEnabled(false);
+              transitionResetRafRef.current = requestAnimationFrame(() => {
+                setCurrentSlide(slides.length);
+                transitionResetRafRef.current = requestAnimationFrame(() => {
+                  setIsTransitionEnabled(true);
+                  setIsTransitioning(false);
+                });
+              });
+              return;
+            }
+            if (currentSlide === slides.length + 1) {
+              setIsTransitionEnabled(false);
+              transitionResetRafRef.current = requestAnimationFrame(() => {
+                setCurrentSlide(1);
+                transitionResetRafRef.current = requestAnimationFrame(() => {
+                  setIsTransitionEnabled(true);
+                  setIsTransitioning(false);
+                });
+              });
+              return;
+            }
+            setIsTransitioning(false);
+          }}
           style={{
             transform: `translateX(-${currentSlide * 100}%)`,
           }}
@@ -213,25 +238,31 @@ export default function Hero() {
           ))}
         </div>
       </section>
-      {/* Navigation Controls (hidden on mobile) */}
-      {!isMobile && (
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 flex justify-between px-4">
-          <button
-            onClick={prevSlide}
-            disabled={isTransitioning}
-            className="p-2 bg-blanco/10 backdrop-blur-sm border border-blanco/20 rounded-full text-blanco hover:bg-blanco/20 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            onClick={nextSlide}
-            disabled={isTransitioning}
-            className="p-2 bg-blanco/10 backdrop-blur-sm border border-blanco/20 rounded-full text-blanco hover:bg-blanco/20 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
-      )}
+      {/* Navigation Controls */}
+      <div
+        className={`absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 flex justify-between ${
+          isMobile ? "px-2" : "px-4"
+        }`}
+      >
+        <button
+          onClick={prevSlide}
+          disabled={isTransitioning}
+          className={`bg-blanco/10 backdrop-blur-sm border border-blanco/20 rounded-full text-blanco hover:bg-blanco/20 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed ${
+            isMobile ? "p-1.5" : "p-2"
+          }`}
+        >
+          <ChevronLeft className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
+        </button>
+        <button
+          onClick={nextSlide}
+          disabled={isTransitioning}
+          className={`bg-blanco/10 backdrop-blur-sm border border-blanco/20 rounded-full text-blanco hover:bg-blanco/20 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed ${
+            isMobile ? "p-1.5" : "p-2"
+          }`}
+        >
+          <ChevronRight className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
+        </button>
+      </div>
 
       {/* Play/Pause Control */}
       <div className="absolute top-4 right-4 z-20">
@@ -255,7 +286,7 @@ export default function Hero() {
             onClick={() => goToSlide(index)}
             disabled={isTransitioning}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              index + 1 === currentSlide // +1 because currentSlide is offset by clone
+              index + 1 === currentRealSlide
                 ? "bg-blanco shadow-lg"
                 : "bg-blanco/50 hover:bg-blanco/75"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -266,7 +297,7 @@ export default function Hero() {
       {/* Slide Counter */}
       <div className="absolute bottom-4 right-4 z-20">
         <div className="bg-blanco/10 backdrop-blur-sm border border-blanco/20 rounded-full px-3 py-1 text-blanco text-xs font-medium">
-          {((currentSlide - 1) % slides.length) + 1} / {slides.length}
+          {currentRealSlide} / {slides.length}
         </div>
       </div>
     </section>

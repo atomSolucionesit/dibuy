@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Star,
   Heart,
   ShoppingCart,
   Minus,
   Plus,
+  Check,
   Truck,
   RotateCcw,
 } from "lucide-react";
@@ -17,7 +17,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { ProductService } from "@/services/productService";
-import { Product, Brand } from "@/types/api";
+import { Product, Brand, ProductVariant, ProductVariantGroup } from "@/types/api";
 
 export default function ProductPage() {
   const params = useParams();
@@ -25,7 +25,7 @@ export default function ProductPage() {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [product, setProducto] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -91,6 +91,126 @@ export default function ProductPage() {
     fetchBrandProduct(product?.brandId);
   }, [product, brands]);
 
+  useEffect(() => {
+    setSelectedOptions({});
+  }, [product?.id]);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const variantGroups: ProductVariantGroup[] = useMemo(
+    () =>
+      (product?.variantGroups || []).filter(
+        (group) => (group?.options || []).length > 0,
+      ),
+    [product?.variantGroups],
+  );
+
+  const selectableVariants: ProductVariant[] = useMemo(() => {
+    return ((product?.variants || []) as ProductVariant[]).filter(
+      (variant) =>
+        variant?.isActive !== false &&
+        Number(variant?.stock || 0) > 0 &&
+        (variant?.optionLinks || []).length > 0,
+    );
+  }, [product?.variants]);
+
+  const hasVariantGroups = Boolean(
+    product?.hasVariants && variantGroups.length > 0 && selectableVariants.length > 0,
+  );
+
+  const isOptionEnabled = (
+    groupId: string,
+    optionId: string,
+  ): boolean => {
+    if (!hasVariantGroups) return true;
+    return selectableVariants.some((variant) => {
+      const links = variant.optionLinks || [];
+      const hasOption = links.some(
+        (link) => link.groupId === groupId && link.optionId === optionId,
+      );
+      if (!hasOption) return false;
+
+      return Object.entries(selectedOptions).every(([selectedGroupId, selectedOptionId]) => {
+        if (selectedGroupId === groupId) return true;
+        return links.some(
+          (link) =>
+            link.groupId === selectedGroupId &&
+            link.optionId === selectedOptionId,
+        );
+      });
+    });
+  };
+
+  const toggleGroupOption = (groupId: string, optionId: string) => {
+    setSelectedOptions((prev) => {
+      if (prev[groupId] === optionId) {
+        const copy = { ...prev };
+        delete copy[groupId];
+        return copy;
+      }
+      return { ...prev, [groupId]: optionId };
+    });
+  };
+
+  const selectedVariant = useMemo(() => {
+    if (!hasVariantGroups) return null;
+    if (Object.keys(selectedOptions).length !== variantGroups.length) return null;
+
+    return (
+      selectableVariants.find((variant) => {
+        const links = variant.optionLinks || [];
+        return variantGroups.every((group) =>
+          links.some(
+            (link) =>
+              link.groupId === group.id &&
+              link.optionId === selectedOptions[group.id],
+          ),
+        );
+      }) || null
+    );
+  }, [hasVariantGroups, selectableVariants, selectedOptions, variantGroups]);
+
+  const canAddToCart = !hasVariantGroups || Boolean(selectedVariant);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    if (hasVariantGroups && !selectedVariant) return;
+
+    const selectedVariantLabels =
+      selectedVariant?.optionLinks
+        ?.map((link) => link.option?.displayLabel || link.option?.value)
+        ?.filter(Boolean) || [];
+
+    const productWithSelection = {
+      ...product,
+      selectedColor:
+        selectedVariantLabels.length > 0
+          ? selectedVariantLabels.join(" / ")
+          : product.color
+            ? product.color.split(",")[0]
+            : "",
+      selectedVariantCombinationId: selectedVariant?.id || null,
+      selectedVariantName: selectedVariant?.name || null,
+      selectedVariantOptions: selectedOptions,
+    };
+    for (let i = 0; i < quantity; i++) {
+      addItem(productWithSelection as Product);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setMousePosition({ x, y });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -117,31 +237,6 @@ export default function ProductPage() {
       </div>
     );
   }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const handleAddToCart = () => {
-    const productWithColor = {
-      ...product,
-      selectedColor: selectedColor || (product.color ? product.color.split(',')[0] : '')
-    };
-    for (let i = 0; i < quantity; i++) {
-      addItem(productWithColor);
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setMousePosition({ x, y });
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -254,23 +349,80 @@ export default function ProductPage() {
 
             <p className="text-gray-700">{product.description}</p>
 
-            {/* Colors */}
-            {product.color && (
+            {/* Variantes */}
+            {hasVariantGroups && (
+              <div className="space-y-3">
+                <span className="font-medium">Variantes:</span>
+                {variantGroups.map((group) => (
+                  <div key={group.id} className="space-y-2">
+                    <div className="text-sm font-semibold text-gray-700">{group.name}</div>
+                    <div className="flex flex-wrap gap-2">
+                      {group.options.map((option) => {
+                        const selected = selectedOptions[group.id] === option.id;
+                        const enabled = isOptionEnabled(group.id, option.id);
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() =>
+                              enabled && toggleGroupOption(group.id, option.id)
+                            }
+                            className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                              selected
+                                ? "border-primary text-primary bg-primary/10"
+                                : enabled
+                                  ? "border-gray-300 text-gray-700 bg-white hover:border-primary/50"
+                                  : "border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed"
+                            }`}
+                            disabled={!enabled}
+                          >
+                            <span
+                              className={`flex h-4 w-4 items-center justify-center rounded-[4px] border ${
+                                selected
+                                  ? "bg-primary border-primary text-white"
+                                  : "border-gray-300 bg-white"
+                              }`}
+                            >
+                              {selected ? <Check className="h-3 w-3" /> : null}
+                            </span>
+                            {option.colorHex ? (
+                              <span
+                                className="h-3.5 w-3.5 rounded-full border border-gray-300"
+                                style={{ backgroundColor: option.colorHex }}
+                              />
+                            ) : null}
+                            <span>{option.name}</span>
+                            <span>{option.displayLabel || option.value}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {!selectedVariant && (
+                  <p className="text-xs text-gray-500">
+                    Selecciona una opción en cada grupo para poder agregar al carrito.
+                  </p>
+                )}
+                {selectedVariant && (
+                  <p className="text-xs text-green-700">
+                    Combinación: {selectedVariant.name}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!hasVariantGroups && product.color && (
               <div className="space-y-3">
                 <span className="font-medium">Color:</span>
                 <div className="flex flex-wrap gap-2">
-                  {product.color.split(',').map((color, index) => (
-                    <button
+                  {product.color.split(",").map((color, index) => (
+                    <span
                       key={index}
-                      onClick={() => setSelectedColor(color.trim())}
-                      className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                        selectedColor === color.trim() || (!selectedColor && index === 0)
-                          ? "border-primary bg-primary text-white"
-                          : "border-gray-300 hover:border-primary"
-                      }`}
+                      className="px-4 py-2 border rounded-lg text-sm font-medium border-gray-300 text-gray-700"
                     >
                       {color.trim()}
-                    </button>
+                    </span>
                   ))}
                 </div>
               </div>
@@ -302,7 +454,12 @@ export default function ProductPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleAddToCart}
-                  className="group relative overflow-hidden flex-1 bg-gradient-primary text-white px-6 py-4 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
+                  disabled={!canAddToCart}
+                  className={`group relative overflow-hidden flex-1 px-6 py-4 rounded-lg font-medium transition-all duration-300 shadow-lg flex items-center justify-center space-x-2 ${
+                    canAddToCart
+                      ? "bg-gradient-primary text-white hover:opacity-90 hover:shadow-xl hover:scale-105 active:scale-95"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
                 >
                   <span className="relative z-10 flex items-center space-x-2">
                     <ShoppingCart className="h-5 w-5" />

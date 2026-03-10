@@ -175,7 +175,7 @@ export default function CartPage() {
               <div className="space-y-4">
                 {state.items.map((item) => (
                   <div
-                    key={item.id}
+                    key={item.cartItemKey}
                     className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 border border-gray-200 rounded-lg"
                   >
                     <div className="flex-shrink-0 mx-auto sm:mx-0">
@@ -197,6 +197,11 @@ export default function CartPage() {
                       <p className="text-xs sm:text-sm text-gray">
                         Marca: {item.brandId}
                       </p>
+                      {item.selectedVariantName && (
+                        <p className="text-xs sm:text-sm text-primary">
+                          Variante: {item.selectedVariantName}
+                        </p>
+                      )}
                       {item.selectedColor && (
                         <p className="text-xs sm:text-sm text-primary">
                           Color: {item.selectedColor}
@@ -219,7 +224,7 @@ export default function CartPage() {
                           <div className="flex items-center border border-gray-300 rounded-lg">
                             <button
                               onClick={() =>
-                                updateQuantity(item.id, item.quantity - 1)
+                                updateQuantity(item.cartItemKey, item.quantity - 1)
                               }
                               className="p-1 hover:bg-gray-100"
                             >
@@ -230,7 +235,7 @@ export default function CartPage() {
                             </span>
                             <button
                               onClick={() =>
-                                updateQuantity(item.id, item.quantity + 1)
+                                updateQuantity(item.cartItemKey, item.quantity + 1)
                               }
                               className="p-1 hover:bg-gray-100"
                             >
@@ -239,7 +244,7 @@ export default function CartPage() {
                           </div>
 
                           <button
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => removeItem(item.cartItemKey)}
                             className="p-1 sm:p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
                           >
                             <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
