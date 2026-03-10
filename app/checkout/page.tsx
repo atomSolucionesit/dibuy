@@ -1,5 +1,6 @@
 "use client";
 
+<<<<<<< Updated upstream
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -24,6 +25,20 @@ import {
   getPaymentStatus,
 } from "@/services/payments";
 import { createModoCheckout } from "@/services/modo";
+=======
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { Minus, Plus, Trash2, CreditCard, Truck, Shield, RotateCcw, CheckCircle } from "lucide-react"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
+import { useCart } from "@/contexts/CartContext"
+import { createSale, updateSale } from "@/api/sales/saleService"
+import { createCustomer } from "@/api/customers/customerService"
+import { createToken, createPayment, getInstallmentOptions, getPaymentStatus } from "@/services/payments"
+import { getPaymentMethodId } from "@/lib/cardUtils"
+import { getCarriers } from "@/api/shipping/shippingService"
+>>>>>>> Stashed changes
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
@@ -86,6 +101,7 @@ export default function CheckoutPage() {
   const [lng, setLng] = useState<string | null>(null);
   const [mapUrl, setMapUrl] = useState<string | null>(null);
   const [isSearchingMap, setIsSearchingMap] = useState(false);
+<<<<<<< Updated upstream
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -146,6 +162,25 @@ export default function CheckoutPage() {
     // @ts-ignore
     window.ModoSDK?.modoInitPayment(modalObject);
   };
+=======
+  const [carriers, setCarriers] = useState<any[]>([]);
+  const [selectedCarrier, setSelectedCarrier] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchCarriersData = async () => {
+      const data = await getCarriers();
+      if (data && Array.isArray(data)) {
+        setCarriers(data);
+        if (state.shipping?.carrierId) {
+          setSelectedCarrier(state.shipping.carrierId);
+        } else if (data.length > 0) {
+          setSelectedCarrier(data.find((c: any) => c.isDefault)?.id || data[0].id);
+        }
+      }
+    };
+    fetchCarriersData();
+  }, []);
+>>>>>>> Stashed changes
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -211,6 +246,7 @@ export default function CheckoutPage() {
             discount: 0,
             selectedColor: item.selectedColor || null,
           })),
+          preferredPaymentMethod: formData.paymentMethod,
         };
 
         const sale = await createSale(salePayload);
@@ -272,7 +308,10 @@ export default function CheckoutPage() {
           latitude: lat,
           longitude: lng,
         };
+        salePayload.carrierId = selectedCarrier;
       }
+
+      salePayload.preferredPaymentMethod = formData.paymentMethod;
 
       salePayload.details = state.items.map((item) => ({
         productId: item.id,
@@ -627,6 +666,26 @@ export default function CheckoutPage() {
                           />
                         </div>
                       </div>
+
+                      {carriers.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Empresa de correo (Carrier)
+                          </label>
+                          <select
+                            value={selectedCarrier || ""}
+                            onChange={(e) => setSelectedCarrier(Number(e.target.value))}
+                            className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
+                            required
+                          >
+                            {carriers.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name} {c.type ? `(${c.type})` : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
 
                       <div className="flex items-center gap-3">
                         <button

@@ -183,12 +183,12 @@ export default function Header() {
           <nav className="hidden md:block border-t border-gray-100">
             <div className="flex items-center py-3 gap-4">
               <div className="flex-1 overflow-hidden">
-                <div className="flex items-center gap-6 overflow-x-auto categories-scroll">
+                <div className="categories-nav-container overflow-x-auto categories-scroll">
                   {categories?.map((category) => (
                     <Link
                       key={category.id}
                       href={`/categoria/${category.id}`}
-                      className="text-sm font-medium text-gray-700 hover:text-magenta transition-colors whitespace-nowrap px-3 py-2 rounded-md hover:bg-gray-50 flex-shrink-0"
+                      className="category-link-full"
                     >
                       {category.name}
                     </Link>
@@ -208,9 +208,8 @@ export default function Header() {
         {/* Mobile Navigation */}
         {!isCartPage && (
           <nav
-            className={`${
-              isMenuOpen ? "block" : "hidden"
-            } md:hidden border-t border-gray-100`}
+            className={`${isMenuOpen ? "block" : "hidden"
+              } md:hidden border-t border-gray-100`}
           >
             <div className="py-2">
               <Link
