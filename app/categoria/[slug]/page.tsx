@@ -27,9 +27,9 @@ export default function CategoryPage() {
           ProductService.getProductsByCategory(slug),
           ProductService.getPublishedCategories()
         ]);
-        
+
         setProducts(productsResponse.data || []);
-        
+
         // Buscar el nombre real de la categoría
         const category = categoriesResponse?.find(cat => cat.id === slug);
         setCategoryName(category?.name || decodeURIComponent(slug).replace(/-/g, " ").toUpperCase());
@@ -90,8 +90,8 @@ export default function CategoryPage() {
           ) : products.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
               {products.map((product) => (
-                <div key={product.id} className="card-product group bg-white flex flex-col h-full">
-                  <div className="relative mb-4">
+                <div key={product.id} className="card-product group">
+                  <div className="card-product-img">
                     {product.badge && (
                       <span className="absolute top-2 left-2 px-3 py-1 text-xs font-medium rounded-full z-10 badge-magenta">
                         {product.badge}
@@ -100,13 +100,13 @@ export default function CategoryPage() {
                     <button className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-magenta hover:text-white">
                       <Heart className="h-4 w-4" />
                     </button>
-                    <Link href={`/producto/${product.id}`}>
+                    <Link href={`/producto/${product.id}`} className="w-full h-full flex items-center justify-center">
                       <Image
                         src={product.images[0]?.url || "/placeholder.svg"}
                         alt={product.name}
                         width={300}
                         height={300}
-                        className="w-full h-48 object-contain rounded-lg group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                       />
                     </Link>
                   </div>

@@ -17,6 +17,7 @@ export interface CartItem extends Product {
 interface ShippingOption {
   name: string
   price: number
+  carrierId?: number | null
 }
 
 interface CartState {
@@ -39,11 +40,19 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "ADD_ITEM": {
       const productWithColor = action.payload as Product & { selectedColor?: string }
+<<<<<<< Updated upstream
       
       const incomingVariantId = (productWithColor as any).selectedVariantCombinationId || null
       const incomingKey = `${productWithColor.id}::${incomingVariantId || "base"}`
       const existingItemIndex = state.items.findIndex((item) => item.cartItemKey === incomingKey)
       
+=======
+
+      const incomingVariantId = (productWithColor as any).selectedVariantCombinationId || null
+      const incomingKey = `${productWithColor.id}::${incomingVariantId || "base"}`
+      const existingItemIndex = state.items.findIndex((item) => item.cartItemKey === incomingKey)
+
+>>>>>>> Stashed changes
       if (existingItemIndex !== -1) {
         // Si existe, actualizar el item existente
         const updatedItems = state.items.map((item, index) => {
@@ -62,7 +71,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           }
           return item
         })
-        
+
         const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
         const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -83,7 +92,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
-      return { items: updatedItems, total, itemCount }
+      return { ...state, items: updatedItems, total, itemCount }
     }
 
     case "UPDATE_QUANTITY": {
@@ -96,11 +105,11 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const total = updatedItems.reduce((sum, item) => sum + item.sellingPrice * item.quantity, 0)
       const itemCount = updatedItems.reduce((sum, item) => sum + item.quantity, 0)
 
-      return { items: updatedItems, total, itemCount }
+      return { ...state, items: updatedItems, total, itemCount }
     }
 
     case "CLEAR_CART":
-      return { items: [], total: 0, itemCount: 0 }
+      return { ...state, items: [], total: 0, itemCount: 0, shipping: null }
 
     case "LOAD_CART":
       return action.payload
@@ -188,7 +197,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <CartContext.Provider value={{ state, addItem, removeItem, updateQuantity, clearCart, setShipping, clearShipping}}>
+    <CartContext.Provider value={{ state, addItem, removeItem, updateQuantity, clearCart, setShipping, clearShipping }}>
       {children}
     </CartContext.Provider>
   )

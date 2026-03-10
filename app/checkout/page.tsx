@@ -21,34 +21,11 @@ import { createCustomer } from "@/api/customers/customerService";
 import {
   createToken,
   createPayment,
-  getPaymentStatus,
-} from "@/services/payments";
-import { createModoCheckout } from "@/services/modo";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import {
-  Minus,
-  Plus,
-  Trash2,
-  CreditCard,
-  Truck,
-  Shield,
-  RotateCcw,
-  CheckCircle,
-} from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { useCart } from "@/contexts/CartContext";
-import { createSale, updateSale } from "@/api/sales/saleService";
-import { createCustomer } from "@/api/customers/customerService";
-import {
-  createToken,
-  createPayment,
   getInstallmentOptions,
   getPaymentStatus,
 } from "@/services/payments";
 import { getPaymentMethodId } from "@/lib/cardUtils";
+import { getCarriers } from "@/api/shipping/shippingService";
 //import { useDeviceFingerprint } from "@/services/useDeviceFingerprint"
 
 const paymentMethods = [
@@ -116,69 +93,25 @@ export default function CheckoutPage() {
   const [lng, setLng] = useState<string | null>(null);
   const [mapUrl, setMapUrl] = useState<string | null>(null);
   const [isSearchingMap, setIsSearchingMap] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [carriers, setCarriers] = useState<any[]>([]);
+  const [selectedCarrier, setSelectedCarrier] = useState<number | null>(null);
 
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    const onResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const fetchCarriersData = async () => {
+      const data = await getCarriers();
+      if (data && Array.isArray(data)) {
+        setCarriers(data);
+        if (state.shipping?.carrierId) {
+          setSelectedCarrier(state.shipping.carrierId);
+        } else if (data.length > 0) {
+          setSelectedCarrier(
+            data.find((c: any) => c.isDefault)?.id || data[0].id,
+          );
+        }
+      }
+    };
+    fetchCarriersData();
   }, []);
-
-  // MODO payment integration
-  useEffect(() => {
-    const script = document.createElement("script");
-    const src =
-      process.env.NODE_ENV === "production"
-        ? "https://ecommerce-modal.modo.com.ar/bundle.js"
-        : "https://ecommerce-modal.preprod.modo.com.ar/bundle.js";
-    script.src = src;
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  const createPaymentIntention = async () => {
-    // use the central service rather than a fetch to the frontend
-    const json = await createModoCheckout(total);
-    return {
-      checkoutId: json.id,
-      qrString: json.qr,
-      deeplink: json.deeplink,
-    };
-  };
-
-  const showModal = async () => {
-    console.log(
-      "Modo script env",
-      process.env.NODE_ENV === "production" ? "prod" : "preprod",
-    );
-    const modalData = await createPaymentIntention();
-    const modalObject: any = {
-      version: "2",
-      qrString: modalData.qrString,
-      checkoutId: modalData.checkoutId,
-      deeplink: {
-        url: modalData.deeplink,
-        callbackURL: window.location.href,
-        callbackURLSuccess: window.location.origin + "/payment/success",
-      },
-      callbackURL: window.location.origin + "/payment/success",
-      refreshData: createPaymentIntention,
-      onSuccess: () => {
-        console.log("modo success");
-        router.push("/payment/success");
-      },
-      onFailure: () => {
-        console.log("modo failure");
-        router.push("/payment/failure");
-      },
-    };
-    // @ts-ignore
-    window.ModoSDK?.modoInitPayment(modalObject);
-  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -246,6 +179,7 @@ export default function CheckoutPage() {
             productVariantId: item.selectedVariantCombinationId || null,
             productVariantName: item.selectedVariantName || null,
           })),
+          preferredPaymentMethod: formData.paymentMethod,
         };
 
         const sale = await createSale(salePayload);
@@ -307,7 +241,10 @@ export default function CheckoutPage() {
           latitude: lat,
           longitude: lng,
         };
+        salePayload.carrierId = selectedCarrier;
       }
+
+      salePayload.preferredPaymentMethod = formData.paymentMethod;
 
       salePayload.details = state.items.map((item) => ({
         productId: item.id,
@@ -683,6 +620,28 @@ export default function CheckoutPage() {
                           />
                         </div>
                       </div>
+
+                      {carriers.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Empresa de correo (Carrier)
+                          </label>
+                          <select
+                            value={selectedCarrier || ""}
+                            onChange={(e) =>
+                              setSelectedCarrier(Number(e.target.value))
+                            }
+                            className="w-full px-4 py-3 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
+                            required
+                          >
+                            {carriers.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name} {c.type ? `(${c.type})` : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
 
                       <div className="flex items-center gap-3">
                         <button

@@ -55,7 +55,7 @@ export default function FeaturedProducts() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
           {products.map((product) => (
             <div key={product.id} className="card-product group">
-              <div className="relative mb-4 p-4">
+              <div className="card-product-img">
                 {product.badge && (
                   <span
                     className={`absolute top-2 left-2 px-3 py-1 text-xs font-medium rounded-full z-10 ${
@@ -72,13 +72,13 @@ export default function FeaturedProducts() {
                 <button className="absolute top-2 right-2 p-2 bg-blanco rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-magenta hover:text-blanco">
                   <Heart className="h-4 w-4" />
                 </button>
-                <Link href={`/producto/${product.id}`}>
+                <Link href={`/producto/${product.id}`} className="w-full h-full flex items-center justify-center">
                   <Image
                     src={product?.images[0]?.url || "/placeholder.svg"}
                     alt={product.name}
                     width={300}
                     height={300}
-                    className="w-full h-48 object-contain rounded-lg group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                   />
                 </Link>
               </div>
