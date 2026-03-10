@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { getShippingCost } from "@/services/shipping";
 import { provincias } from "@/data/provincias";
+import { getCarriers } from "@/api/shipping/shippingService";
 
 export default function CartPage() {
   const {
@@ -23,7 +24,8 @@ export default function CartPage() {
   const [loadingShipping, setLoadingShipping] = useState(false);
   const [provincia, setProvincia] = useState("AR-C");
   const [codigoPostal, setCodigoPostal] = useState("");
-  const [empresa, setEmpresa] = useState("correoArgentino");
+  const [empresa, setEmpresa] = useState("");
+  const [carriers, setCarriers] = useState<any[]>([]);
   const [quotes, setQuotes] = useState<{ name: string; price: number }[]>([]);
   const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">(
     "shipping",
@@ -85,7 +87,8 @@ export default function CartPage() {
         setQuotes(opciones);
         if (opciones.length > 0) {
           const firstQuote = opciones[0];
-          setShipping(firstQuote);
+          const selectedCarrierObj = carriers.find(c => c.name.toLowerCase().replace(/\s/g, "") === empresa);
+          setShipping({ ...firstQuote, carrierId: selectedCarrierObj?.id });
         }
       })
       .finally(() => setLoadingShipping(false));
@@ -104,9 +107,24 @@ export default function CartPage() {
   const handleShippingQuoteChange = (quoteName: string) => {
     const quote = quotes.find((q) => q.name === quoteName);
     if (quote) {
-      setShipping(quote);
+      const selectedCarrierObj = carriers.find(c => c.name.toLowerCase().replace(/\s/g, "") === empresa);
+      setShipping({ ...quote, carrierId: selectedCarrierObj?.id });
     }
   };
+
+  useEffect(() => {
+    const fetchCarriersData = async () => {
+      const data = await getCarriers();
+      if (data && Array.isArray(data)) {
+        setCarriers(data);
+        if (data.length > 0) {
+          const defaultCarrier = data.find((c: any) => (c as any).isDefault) || data[0];
+          setEmpresa(defaultCarrier.name.toLowerCase().replace(/\s/g, ""));
+        }
+      }
+    };
+    fetchCarriersData();
+  }, []);
 
   useEffect(() => {
     if (state.items.length === 0) clearShipping();
@@ -382,11 +400,15 @@ export default function CartPage() {
                                 onChange={(e) => setEmpresa(e.target.value)}
                                 className="w-full px-3 py-2 border border-negro bg-blanco-light rounded-lg focus:outline-none focus:border-primary"
                               >
-                                <option value="oca">OCA</option>
-                                <option value="correoArgentino">
-                                  Correo Argentino
-                                </option>
-                                <option value="andreani">Andreani</option>
+                                {carriers.length > 0 ? (
+                                  carriers.map((c) => (
+                                    <option key={c.id} value={c.name.toLowerCase().replace(/\s/g, "")}>
+                                      {c.name}
+                                    </option>
+                                  ))
+                                ) : (
+                                  <option value="">No hay transportistas disponibles</option>
+                                )}
                               </select>
                             </div>
 
@@ -444,9 +466,9 @@ export default function CartPage() {
                     <span className="text-primary">
                       {formatPrice(
                         state.total +
-                          (deliveryMethod === "pickup"
-                            ? 0
-                            : state.shipping?.price || 0),
+                        (deliveryMethod === "pickup"
+                          ? 0
+                          : state.shipping?.price || 0),
                       )}
                     </span>
                   </div>
@@ -475,7 +497,7 @@ export default function CartPage() {
               </h3>
               <ul className="space-y-2 text-sm text-gray">
                 {/* <li>✓ Envío gratis en compras superiores a $50.000</li> */}
-                <li>✓ Garantía oficial de 12 meses</li>
+                <li>✓ Garantía oficial</li>
                 <li>✓ Devolución gratuita hasta 30 días</li>
                 <li>✓ Soporte técnico especializado</li>
               </ul>

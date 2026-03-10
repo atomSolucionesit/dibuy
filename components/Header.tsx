@@ -140,7 +140,7 @@ export default function Header() {
     const onClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       const clickedInsideSearch = Boolean(
-        target?.closest('[data-search-scope="true"]')
+        target?.closest('[data-search-scope="true"]'),
       );
       if (!clickedInsideSearch) {
         setIsSearchOpen(false);
@@ -176,19 +176,27 @@ export default function Header() {
   return (
     <header className="bg-blanco shadow-sm sticky top-0 z-50 border-b border-gray-100">
       {!isCartPage && (
-        <div className={`w-full overflow-hidden transition-all duration-500 ${bannerColors.bg}`}>
+        <div
+          className={`w-full overflow-hidden transition-all duration-500 ${bannerColors.bg}`}
+        >
           <div className="topbar-marquee py-2">
             <div ref={marqueeTrackRef} className="topbar-marquee-track">
               <div ref={marqueeGroupRef} className="topbar-marquee-group">
                 {marqueeItems.map((msg, index) => (
-                  <span key={`group-a-${index}`} className={`text-sm font-medium ${bannerColors.text}`}>
+                  <span
+                    key={`group-a-${index}`}
+                    className={`text-sm font-medium ${bannerColors.text}`}
+                  >
                     {msg}
                   </span>
                 ))}
               </div>
               <div className="topbar-marquee-group" aria-hidden="true">
                 {marqueeItems.map((msg, index) => (
-                  <span key={`group-b-${index}`} className={`text-sm font-medium ${bannerColors.text}`}>
+                  <span
+                    key={`group-b-${index}`}
+                    className={`text-sm font-medium ${bannerColors.text}`}
+                  >
                     {msg}
                   </span>
                 ))}
@@ -201,7 +209,13 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex-shrink-0">
-            <Image src="/logo.png" alt="DIBUY" width={120} height={40} className="h-32 w-auto" />
+            <Image
+              src="/logo.png"
+              alt="DIBUY"
+              width={120}
+              height={40}
+              className="h-32 w-auto"
+            />
           </Link>
 
           {!isCartPage && (
@@ -232,7 +246,9 @@ export default function Header() {
                         Escribí al menos 2 caracteres para buscar productos
                       </div>
                     ) : isSearching ? (
-                      <div className="p-4 text-sm text-gray-500">Buscando...</div>
+                      <div className="p-4 text-sm text-gray-500">
+                        Buscando...
+                      </div>
                     ) : searchResults.length === 0 ? (
                       <div className="p-4 text-sm text-gray-500">
                         No se encontraron productos
@@ -250,14 +266,18 @@ export default function Header() {
                             className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3"
                           >
                             <Image
-                              src={product.images?.[0]?.url || "/placeholder.svg"}
+                              src={
+                                product.images?.[0]?.url || "/placeholder.svg"
+                              }
                               alt={product.name}
                               width={48}
                               height={48}
                               className="rounded-lg object-contain bg-gray-100 flex-shrink-0"
                             />
                             <div className="min-w-0">
-                              <p className="text-sm text-negro truncate">{product.name}</p>
+                              <p className="text-sm text-negro truncate">
+                                {product.name}
+                              </p>
                               <p className="text-sm font-semibold text-magenta">
                                 {formatPrice(product.sellingPrice)}
                               </p>
@@ -287,8 +307,15 @@ export default function Header() {
               </span>
             </Link>
 
-            <button className="md:hidden hover:text-magenta transition-colors" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <button
+              className="md:hidden hover:text-magenta transition-colors"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
           </div>
         </div>
@@ -296,13 +323,13 @@ export default function Header() {
         {!isCartPage && (
           <nav className="hidden md:block border-t border-gray-100">
             <div className="flex items-center py-3 gap-4">
-              <div className="flex-1">
-                <div className="flex items-center justify-between w-full gap-2">
+              <div className="flex-1 overflow-hidden">
+                <div className="categories-nav-container overflow-x-auto categories-scroll">
                   {categories?.map((category) => (
                     <Link
                       key={category.id}
                       href={`/categoria/${category.id}`}
-                      className="text-sm font-medium text-gray-700 hover:text-magenta transition-colors whitespace-nowrap px-2 py-2 rounded-md hover:bg-gray-50 text-center flex-1"
+                      className="category-link-full"
                     >
                       {category.name}
                     </Link>
@@ -344,87 +371,24 @@ export default function Header() {
         )}
 
         {!isCartPage && (
-          <div className="md:hidden pb-3">
-            <div className="relative" data-search-scope="true">
-              <input
-                type="text"
-                placeholder="Buscar productos tecnológicos..."
-                value={searchQuery}
-                onFocus={() => setIsSearchOpen(true)}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setIsSearchOpen(true);
-                }}
-                className="input-primary w-full pr-12 py-2 bg-gray-200 text-negro"
-              />
-              <button
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-magenta transition-colors"
-                onClick={() => setIsSearchOpen(true)}
-              >
-                <Search className="h-4 w-4" />
-              </button>
-            </div>
-
-            {isSearchOpen && (
-              <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-[320px] overflow-y-auto">
-                {searchQuery.trim().length < 2 ? (
-                  <div className="p-4 text-sm text-gray-500">
-                    Escribí al menos 2 caracteres para buscar productos
-                  </div>
-                ) : isSearching ? (
-                  <div className="p-4 text-sm text-gray-500">Buscando...</div>
-                ) : searchResults.length === 0 ? (
-                  <div className="p-4 text-sm text-gray-500">
-                    No se encontraron productos
-                  </div>
-                ) : (
-                  <div className="py-2">
-                    {searchResults.map((product) => (
-                      <button
-                        key={product.id}
-                        onClick={() => {
-                          setIsSearchOpen(false);
-                          setSearchQuery("");
-                          router.push(`/producto/${product.id}`);
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                      >
-                        <Image
-                          src={product.images?.[0]?.url || "/placeholder.svg"}
-                          alt={product.name}
-                          width={44}
-                          height={44}
-                          className="rounded-lg object-contain bg-gray-100 flex-shrink-0"
-                        />
-                        <div className="min-w-0">
-                          <p className="text-sm text-negro truncate">{product.name}</p>
-                          <p className="text-sm font-semibold text-magenta">
-                            {formatPrice(product.sellingPrice)}
-                          </p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {!isCartPage && (
-          <nav className={`${isMenuOpen ? "block" : "hidden"} md:hidden border-t border-gray-100`}>
+          <nav
+            className={`${
+              isMenuOpen ? "block" : "hidden"
+            } md:hidden border-t border-gray-100`}
+          >
             <div className="py-2">
               <Link
                 href="/productos"
                 className="flex items-center space-x-2 px-4 py-2 bg-magenta text-white rounded-lg hover:bg-magenta-dark transition-colors w-full justify-center"
               >
-                <span className="text-sm font-medium">Ver todos los productos</span>
+                <span className="text-sm font-medium">
+                  Ver todos los productos
+                </span>
               </Link>
             </div>
           </nav>
         )}
       </div>
-
     </header>
   );
 }
