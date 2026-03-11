@@ -54,6 +54,7 @@ export interface ProductVariantGroupOption {
   value: string;
   displayLabel?: string | null;
   colorHex?: string | null;
+  imageUrl?: string | null;
   groupId: string;
   name?: string;
 }
@@ -77,6 +78,7 @@ export interface ProductVariantOptionLink {
     value: string;
     displayLabel?: string | null;
     colorHex?: string | null;
+    imageUrl?: string | null;
   };
 }
 
@@ -308,3 +310,4 @@ export interface ApiError {
   code?: string;
   details?: any;
 }
+

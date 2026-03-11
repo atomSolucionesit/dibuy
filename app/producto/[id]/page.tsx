@@ -176,6 +176,45 @@ export default function ProductPage() {
     );
   }, [hasVariantGroups, selectableVariants, selectedOptions, variantGroups]);
 
+  const selectedVariantImageUrl = useMemo(() => {
+    if (!hasVariantGroups) return null;
+
+    const selectedWithImage = variantGroups
+      .map((group) => ({
+        group,
+        option: (group.options || []).find(
+          (option) => option.id === selectedOptions[group.id],
+        ),
+      }))
+      .filter((item) => item.option?.imageUrl);
+
+    if (!selectedWithImage.length) return null;
+
+    const prioritized =
+      selectedWithImage.find((item) =>
+        item.group.name?.toLowerCase().includes("color"),
+      ) || selectedWithImage[0];
+
+    return prioritized.option?.imageUrl || null;
+  }, [hasVariantGroups, selectedOptions, variantGroups]);
+
+  const displayImages = useMemo(() => {
+    const baseImages = product?.images || [];
+    if (!selectedVariantImageUrl) return baseImages;
+
+    return [
+      { id: `variant-${selectedVariantImageUrl}`, url: selectedVariantImageUrl },
+      ...baseImages.filter((image) => image?.url && image.url !== selectedVariantImageUrl),
+    ];
+  }, [product?.images, selectedVariantImageUrl]);
+
+  const currentImageUrl =
+    displayImages[selectedImage]?.url || product?.images?.[0]?.url || null;
+
+  useEffect(() => {
+    setSelectedImage(0);
+  }, [product?.id, selectedVariantImageUrl]);
+
   const canAddToCart = !hasVariantGroups || Boolean(selectedVariant);
 
   const handleAddToCart = () => {
@@ -285,7 +324,7 @@ export default function ProductPage() {
                 </span>
               )}
               <Image
-                src={product?.images[selectedImage]?.url}
+                src={currentImageUrl || product?.images?.[0]?.url || "/placeholder-product.png"}
                 alt={product.name}
                 width={800}
                 height={800}
@@ -299,9 +338,9 @@ export default function ProductPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
+              {displayImages.map((image, index) => (
                 <button
-                  key={index}
+                  key={image.id || index}
                   onClick={() => setSelectedImage(index)}
                   className={`relative rounded-lg overflow-hidden ${
                     selectedImage === index ? "ring-2 ring-primary" : ""
