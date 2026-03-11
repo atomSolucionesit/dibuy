@@ -42,15 +42,19 @@ type CartAction =
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "ADD_ITEM": {
-      const productWithColor = action.payload as Product & {
-        selectedColor?: string;
-      };
+      const product = action.payload;
+      const isPromotion = (product as any).isPromotion;
       const incomingVariantId =
-        (productWithColor as any).selectedVariantCombinationId || null;
-      const incomingKey = `${productWithColor.id}::${incomingVariantId || "base"}`;
+        (product as any).selectedVariantCombinationId || null;
+
+      const incomingKey = isPromotion
+        ? `promo-${(product as any).dbPromotionId}`
+        : `${product.id}::${incomingVariantId || "base"}`;
+
       const existingItemIndex = state.items.findIndex(
         (item) => item.cartItemKey === incomingKey,
       );
+
       if (existingItemIndex !== -1) {
         // Si existe, actualizar el item existente
         const updatedItems = state.items.map((item, index) => {
@@ -59,17 +63,17 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
               ...item,
               quantity: item.quantity + 1,
               selectedColor:
-                productWithColor.selectedColor || item.selectedColor,
+                (product as any).selectedColor || item.selectedColor,
               selectedVariantCombinationId:
-                (productWithColor as any).selectedVariantCombinationId ??
+                (product as any).selectedVariantCombinationId ??
                 item.selectedVariantCombinationId ??
                 null,
               selectedVariantName:
-                (productWithColor as any).selectedVariantName ??
+                (product as any).selectedVariantName ??
                 item.selectedVariantName ??
                 null,
               selectedVariantOptions:
-                (productWithColor as any).selectedVariantOptions ??
+                (product as any).selectedVariantOptions ??
                 item.selectedVariantOptions ??
                 null,
             };
@@ -90,7 +94,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       } else {
         // Si no existe, crear nuevo item
         const newItem = {
-          ...productWithColor,
+          ...product,
           quantity: 1,
           cartItemKey: incomingKey,
         } as CartItem;

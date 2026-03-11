@@ -82,7 +82,11 @@ export default function CheckoutPage() {
     email: "",
     phone: "",
     address: "",
+    streetNumber: "",
+    floor: "",
+    apartment: "",
     city: "",
+    state: "",
     postalCode: "",
     paymentMethod: "credit",
     shippingMethod: "standard",
@@ -246,7 +250,10 @@ export default function CheckoutPage() {
             details: [],
           },
           details: state.items.map((item) => ({
-            productId: item.id,
+            productId: (item as any).isPromotion ? null : item.id,
+            promotionId: (item as any).isPromotion
+              ? (item as any).dbPromotionId
+              : null,
             quantity: item.quantity,
             price: item.sellingPrice,
             discount: 0,
@@ -316,7 +323,12 @@ export default function CheckoutPage() {
       if (formData.shippingMethod !== "branch") {
         salePayload.shippingAddress = {
           address: formData.address,
+          number: formData.streetNumber,
+          floor: formData.floor
+            ? `${formData.floor} ${formData.apartment}`.trim()
+            : formData.apartment,
           city: formData.city,
+          state: formData.state,
           postalCode: formData.postalCode,
           latitude: lat,
           longitude: lng,
@@ -327,7 +339,10 @@ export default function CheckoutPage() {
       salePayload.preferredPaymentMethod = formData.paymentMethod;
 
       salePayload.details = state.items.map((item) => ({
-        productId: item.id,
+        productId: (item as any).isPromotion ? null : item.id,
+        promotionId: (item as any).isPromotion
+          ? (item as any).dbPromotionId
+          : null,
         quantity: item.quantity,
         price: item.sellingPrice,
         discount: 0,
@@ -681,28 +696,134 @@ export default function CheckoutPage() {
                       Dirección de envío
                     </h2>
                     <form onSubmit={handleCreateSale} className="space-y-6">
-                      <div>
-                        <label className="block text-sm font-medium mb-2 text-gray-700">
-                          Dirección
-                        </label>
-                        <div className="relative">
-                          <MapPin className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
-                          <input
-                            type="text"
-                            required
-                            value={formData.address}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                address: e.target.value,
-                              })
-                            }
-                            className="w-full pl-11 pr-4 py-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                          />
+                      <div className="grid md:grid-cols-4 gap-6">
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium mb-2 text-gray-700">
+                            Calle
+                          </label>
+                          <div className="relative">
+                            <MapPin className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
+                            <input
+                              type="text"
+                              required
+                              value={formData.address}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  address: e.target.value,
+                                })
+                              }
+                              className="w-full pl-11 pr-4 py-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-700">
+                            Altura
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              required
+                              placeholder="Ej: 123"
+                              value={formData.streetNumber}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  streetNumber: e.target.value,
+                                })
+                              }
+                              className="w-full px-4 py-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-sm font-medium mb-2 text-gray-700">
+                              Piso
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Opc"
+                              value={formData.floor}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  floor: e.target.value,
+                                })
+                              }
+                              className="w-full px-2 py-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2 text-gray-700">
+                              Dpto
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Opc"
+                              value={formData.apartment}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  apartment: e.target.value,
+                                })
+                              }
+                              className="w-full px-2 py-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-6">
+                      <div className="grid md:grid-cols-3 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium mb-2 text-gray-700">
+                            Provincia (Correo)
+                          </label>
+                          <select
+                            required
+                            value={formData.state}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                state: e.target.value,
+                              })
+                            }
+                            className="w-full px-4 py-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                          >
+                            <option value="">Selecciona provincia...</option>
+                            <option value="Buenos Aires">Buenos Aires</option>
+                            <option value="CABA">Capital Federal (CABA)</option>
+                            <option value="Catamarca">Catamarca</option>
+                            <option value="Chaco">Chaco</option>
+                            <option value="Chubut">Chubut</option>
+                            <option value="Córdoba">Córdoba</option>
+                            <option value="Corrientes">Corrientes</option>
+                            <option value="Entre Ríos">Entre Ríos</option>
+                            <option value="Formosa">Formosa</option>
+                            <option value="Jujuy">Jujuy</option>
+                            <option value="La Pampa">La Pampa</option>
+                            <option value="La Rioja">La Rioja</option>
+                            <option value="Mendoza">Mendoza</option>
+                            <option value="Misiones">Misiones</option>
+                            <option value="Neuquén">Neuquén</option>
+                            <option value="Río Negro">Río Negro</option>
+                            <option value="Salta">Salta</option>
+                            <option value="San Juan">San Juan</option>
+                            <option value="San Luis">San Luis</option>
+                            <option value="Santa Cruz">Santa Cruz</option>
+                            <option value="Santa Fe">Santa Fe</option>
+                            <option value="Santiago del Estero">
+                              Santiago del Estero
+                            </option>
+                            <option value="Tierra del Fuego">
+                              Tierra del Fuego
+                            </option>
+                            <option value="Tucumán">Tucumán</option>
+                          </select>
+                        </div>
                         <div>
                           <label className="block text-sm font-medium mb-2 text-gray-700">
                             Ciudad

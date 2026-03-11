@@ -23,7 +23,8 @@ const ensureEcommerceCompanyId = async (): Promise<string> => {
   }
 
   const companyToken = process.env.NEXT_PUBLIC_COMPANY_TOKEN;
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
   if (!companyToken) {
     throw new Error("Falta NEXT_PUBLIC_COMPANY_TOKEN");
@@ -48,15 +49,13 @@ const ensureEcommerceCompanyId = async (): Promise<string> => {
     data?.token ||
     null;
   const companyId =
-    data?.info?.user?.companyId ??
-    data?.info?.companyId ??
-    null;
+    data?.info?.user?.companyId ?? data?.info?.companyId ?? null;
 
   if (token) {
     sessionStorage.setItem(ECOMMERCE_TOKEN_KEY, token);
     sessionStorage.setItem(
       ECOMMERCE_TOKEN_EXP_KEY,
-      (Date.now() + 22 * 60 * 60 * 1000).toString()
+      (Date.now() + 22 * 60 * 60 * 1000).toString(),
     );
   }
 
@@ -71,7 +70,7 @@ const ensureEcommerceCompanyId = async (): Promise<string> => {
 export const ProductService = {
   // Filtrar productos publicados
   filterPublishedProducts(products: Product[]) {
-    return products.filter(product => product.published === true);
+    return products.filter((product) => product.published === true);
   },
 
   async getProducts(page = 1, limit = 20, filters = {}) {
@@ -83,14 +82,18 @@ export const ProductService = {
       ...filters,
     });
 
-    const response = await api.get(`/products/ecommerce/${companyId}?${params}`);
+    const response = await api.get(
+      `/products/ecommerce/${companyId}?${params}`,
+    );
     return response.data.info || response.data;
   },
 
   async getProductById(id: string) {
     const companyId = await ensureEcommerceCompanyId();
 
-    const response = await api.get(`/products/ecommerce/${companyId}/product/${id}`);
+    const response = await api.get(
+      `/products/ecommerce/${companyId}/product/${id}`,
+    );
     return response.data.info?.data || response.data.data || response.data;
   },
 
@@ -98,7 +101,7 @@ export const ProductService = {
     const companyId = await ensureEcommerceCompanyId();
 
     const response = await api.get(
-      `/products/ecommerce/${companyId}/outstanding?limit=${limit}`
+      `/products/ecommerce/${companyId}/outstanding?limit=${limit}`,
     );
     return response.data.info?.data || response.data;
   },
@@ -112,7 +115,9 @@ export const ProductService = {
       search: query,
     });
 
-    const response = await api.get(`/products/ecommerce/${companyId}?${params}`);
+    const response = await api.get(
+      `/products/ecommerce/${companyId}?${params}`,
+    );
     const data = response.data.info || response.data;
     return data.data || data;
   },
@@ -126,7 +131,7 @@ export const ProductService = {
     const companyId = await ensureEcommerceCompanyId();
 
     const response = await api.get(
-      `/products/ecommerce/${companyId}/category/${categoryId}?page=${page}&size=${limit}`
+      `/products/ecommerce/${companyId}/category/${categoryId}?page=${page}&size=${limit}`,
     );
 
     return response.data.info || response.data;
@@ -142,7 +147,7 @@ export const ProductService = {
 
     while (page <= maxPages) {
       const response = await api.get(
-        `/products/ecommerce/${companyId}?page=${page}&size=${size}`
+        `/products/ecommerce/${companyId}?page=${page}&size=${size}`,
       );
       const info = response.data.info || response.data;
       const products: Product[] = info.data || [];
@@ -170,5 +175,19 @@ export const ProductService = {
     }
 
     return Array.from(categoriesMap.values());
+  },
+
+  async getPromotions() {
+    const companyId = await ensureEcommerceCompanyId();
+    const response = await api.get(`/promotions/ecommerce/${companyId}`);
+    return response.data.data || response.data || [];
+  },
+
+  async getPromotionById(id: string) {
+    const companyId = await ensureEcommerceCompanyId();
+    const response = await api.get(
+      `/promotions/ecommerce/${companyId}/promotion/${id}`,
+    );
+    return response.data.data || response.data;
   },
 };

@@ -45,6 +45,8 @@ export interface Product {
   hasVariants?: boolean;
   variantGroups?: ProductVariantGroup[];
   variants?: ProductVariant[];
+  isPromotion?: boolean;
+  dbPromotionId?: number;
 }
 
 export interface ProductVariantGroupOption {
@@ -218,7 +220,8 @@ export interface AuthResponse {
 // Tipos para carrito
 export interface CartItem {
   id: string;
-  productId: string;
+  productId?: string | null;
+  promotionId?: number | null;
   product: Product;
   quantity: number;
   price: number;
