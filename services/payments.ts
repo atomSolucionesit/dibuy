@@ -1,18 +1,33 @@
 import { api } from "@/api";
 
 const PAYWAY_TOKEN_URL = "https://developers.decidir.com/api/v2/tokens";
-let paywayPublicConfigCache: { publicKey: string; companyId: string; env: string } | null = null;
+let paywayPublicConfigCache: {
+  publicKey: string;
+  companyId: string;
+  env: string;
+} | null = null;
 
 const getPaywayPublicConfig = async () => {
   if (paywayPublicConfigCache) {
     return paywayPublicConfigCache;
   }
 
-  const res = await api.get("/payway/public-config");
+  const companyIdFromSession =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("ecommerce_company_id") ||
+        process.env.NEXT_PUBLIC_COMPANY_ID
+      : process.env.NEXT_PUBLIC_COMPANY_ID;
+
+  const query = companyIdFromSession
+    ? `?companyId=${companyIdFromSession}`
+    : "";
+  const res = await api.get(`/payway/public-config${query}`);
   const info = res?.data;
 
   if (!info?.publicKey) {
-    throw new Error("No se encontró la configuración pública de Payway para esta compañía");
+    throw new Error(
+      "No se encontró la configuración pública de Payway para esta compañía",
+    );
   }
 
   paywayPublicConfigCache = {
@@ -70,7 +85,7 @@ export const createPayment = async (
   deviceFingerprintId: string | null,
   paymentMethodId?: number,
   installments?: number,
-  bin?: string
+  bin?: string,
 ) => {
   try {
     const res = await api.post("/payway/payment", {
