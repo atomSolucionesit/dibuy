@@ -1,1 +1,285 @@
-import { useState, useEffect } from \"react\"\nimport { CreditCard, Shield, CheckCircle, AlertCircle } from \"lucide-react\"\nimport Image from \"next/image\"\nimport { getPaymentMethodId, getCardBrand } from \"@/lib/cardUtils\"\n\ninterface PaymentFormProps {\n  onFormChange: (data: {\n    cardNumber: string\n    expiryDate: string\n    cvv: string\n    holderName: string\n    holderDni: string\n    isValid: boolean\n    detectedCard: string\n  }) => void\n}\n\nexport function PaymentFormComponent({ onFormChange }: PaymentFormProps) {\n  const [cardNumber, setCardNumber] = useState(\"\")\n  const [expiryDate, setExpiryDate] = useState(\"\")\n  const [cvv, setCvv] = useState(\"\")\n  const [holderName, setHolderName] = useState(\"\")\n  const [holderDni, setHolderDni] = useState(\"\")\n  const [detectedCard, setDetectedCard] = useState(\"\")\n  const [errors, setErrors] = useState<Record<string, string>>({})\n  const [isFormValid, setIsFormValid] = useState(false)\n\n  const validateCardNumber = (number: string) => {\n    const cleaned = number.replace(/\\s/g, \"\")\n    if (cleaned.length < 13 || cleaned.length > 19) return \"Número de tarjeta inválido\"\n    if (!/^\\d+$/.test(cleaned)) return \"Solo se permiten números\"\n    return \"\"\n  }\n\n  const validateExpiryDate = (date: string) => {\n    if (!/^\\d{2}\\/\\d{2}$/.test(date)) return \"Formato inválido (MM/AA)\"\n    const [month, year] = date.split(\"/\")\n    const currentYear = new Date().getFullYear() % 100\n    const currentMonth = new Date().getMonth() + 1\n    if (parseInt(month) < 1 || parseInt(month) > 12) return \"Mes inválido\"\n    if (parseInt(year) < currentYear || (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {\n      return \"Tarjeta vencida\"\n    }\n    return \"\"\n  }\n\n  const validateCvv = (cvv: string) => {\n    if (cvv.length < 3 || cvv.length > 4) return \"CVV debe tener 3 o 4 dígitos\"\n    if (!/^\\d+$/.test(cvv)) return \"Solo se permiten números\"\n    return \"\"\n  }\n\n  const validateHolderName = (name: string) => {\n    if (name.length < 2) return \"Nombre muy corto\"\n    if (!/^[a-zA-ZÀ-ÿ\\s]+$/.test(name)) return \"Solo se permiten letras\"\n    return \"\"\n  }\n\n  const validateDni = (dni: string) => {\n    if (dni.length < 7 || dni.length > 8) return \"DNI debe tener 7 u 8 dígitos\"\n    if (!/^\\d+$/.test(dni)) return \"Solo se permiten números\"\n    return \"\"\n  }\n\n  const formatCardNumber = (value: string) => {\n    const cleaned = value.replace(/\\s/g, \"\")\n    return cleaned.replace(/(\\d{4})(?=\\d)/g, '$1 ')\n  }\n\n  const formatExpiryDate = (value: string) => {\n    const cleaned = value.replace(/\\D/g, \"\")\n    if (cleaned.length >= 2) {\n      return cleaned.substring(0, 2) + \"/\" + cleaned.substring(2, 4)\n    }\n    return cleaned\n  }\n\n  useEffect(() => {\n    const newErrors: Record<string, string> = {}\n    if (cardNumber) newErrors.cardNumber = validateCardNumber(cardNumber)\n    if (expiryDate) newErrors.expiryDate = validateExpiryDate(expiryDate)\n    if (cvv) newErrors.cvv = validateCvv(cvv)\n    if (holderName) newErrors.holderName = validateHolderName(holderName)\n    if (holderDni) newErrors.holderDni = validateDni(holderDni)\n    \n    setErrors(newErrors)\n    const hasErrors = Object.values(newErrors).some((error) => error !== \"\")\n    const allFieldsFilled = cardNumber && expiryDate && cvv && holderName && holderDni\n    const isValid = !hasErrors && !!allFieldsFilled\n    setIsFormValid(isValid)\n\n    onFormChange({\n      cardNumber: cardNumber.replace(/\\s/g, \"\"),\n      expiryDate,\n      cvv,\n      holderName,\n      holderDni,\n      isValid,\n      detectedCard\n    })\n  }, [cardNumber, expiryDate, cvv, holderName, holderDni, detectedCard, onFormChange])\n\n  return (\n    <div className=\"space-y-6\">\n      <div className=\"space-y-4\">\n        <div className=\"space-y-2\">\n          <label className=\"text-sm font-semibold text-gray-700 flex items-center gap-2\">\n            <CreditCard className=\"h-4 w-4\" />\n            Número de tarjeta *\n          </label>\n          <div className=\"relative\">\n            <input\n              type=\"text\"\n              value={formatCardNumber(cardNumber)}\n              onChange={(e) => {\n                const value = e.target.value.replace(/\\s/g, \"\")\n                setCardNumber(value)\n                if (value.length >= 6) {\n                  setDetectedCard(getCardBrand(value))\n                } else {\n                  setDetectedCard(\"\")\n                }\n              }}\n              placeholder=\"1234 5678 9012 3456\"\n              maxLength={19}\n              className={`w-full p-4 border-2 rounded-xl text-lg font-mono transition-all duration-200 ${\n                errors.cardNumber\n                  ? \"border-red-300 bg-red-50 focus:border-red-500\"\n                  : cardNumber && !errors.cardNumber\n                    ? \"border-green-300 bg-green-50 focus:border-green-500\"\n                    : \"border-gray-200 focus:border-blue-500\"\n              } focus:outline-none focus:ring-2 focus:ring-blue-100`}\n              required\n            />\n            {detectedCard && (\n              <div className=\"absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2\">\n                <CheckCircle className=\"h-5 w-5 text-green-500\" />\n                <span className=\"text-sm font-medium text-green-600\">{detectedCard}</span>\n              </div>\n            )}\n          </div>\n          {errors.cardNumber && (\n            <div className=\"flex items-center gap-1 text-red-600 text-sm\">\n              <AlertCircle className=\"h-4 w-4\" />\n              {errors.cardNumber}\n            </div>\n          )}\n        </div>\n\n        <div className=\"grid grid-cols-2 gap-4\">\n          <div className=\"space-y-2\">\n            <label className=\"text-sm font-semibold text-gray-700\">Vencimiento *</label>\n            <input\n              type=\"text\"\n              value={expiryDate}\n              onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}\n              placeholder=\"MM/AA\"\n              maxLength={5}\n              className={`w-full p-4 border-2 rounded-xl text-lg font-mono transition-all duration-200 ${\n                errors.expiryDate\n                  ? \"border-red-300 bg-red-50 focus:border-red-500\"\n                  : expiryDate && !errors.expiryDate\n                    ? \"border-green-300 bg-green-50 focus:border-green-500\"\n                    : \"border-gray-200 focus:border-blue-500\"\n              } focus:outline-none focus:ring-2 focus:ring-blue-100`}\n              required\n            />\n            {errors.expiryDate && (\n              <div className=\"flex items-center gap-1 text-red-600 text-xs\">\n                <AlertCircle className=\"h-3 w-3\" />\n                {errors.expiryDate}\n              </div>\n            )}\n          </div>\n          <div className=\"space-y-2\">\n            <label className=\"text-sm font-semibold text-gray-700\">CVV *</label>\n            <input\n              type=\"text\"\n              value={cvv}\n              onChange={(e) => setCvv(e.target.value.replace(/\\D/g, \"\"))}\n              placeholder=\"123\"\n              maxLength={4}\n              className={`w-full p-4 border-2 rounded-xl text-lg font-mono transition-all duration-200 ${\n                errors.cvv\n                  ? \"border-red-300 bg-red-50 focus:border-red-500\"\n                  : cvv && !errors.cvv\n                    ? \"border-green-300 bg-green-50 focus:border-green-500\"\n                    : \"border-gray-200 focus:border-blue-500\"\n              } focus:outline-none focus:ring-2 focus:ring-blue-100`}\n              required\n            />\n            {errors.cvv && (\n              <div className=\"flex items-center gap-1 text-red-600 text-xs\">\n                <AlertCircle className=\"h-3 w-3\" />\n                {errors.cvv}\n              </div>\n            )}\n          </div>\n        </div>\n\n        <div className=\"space-y-2\">\n          <label className=\"text-sm font-semibold text-gray-700\">Nombre del titular *</label>\n          <input\n            type=\"text\"\n            value={holderName}\n            onChange={(e) => setHolderName(e.target.value.toUpperCase())}\n            placeholder=\"JUAN PEREZ\"\n            className={`w-full p-4 border-2 rounded-xl text-lg transition-all duration-200 ${\n              errors.holderName\n                ? \"border-red-300 bg-red-50 focus:border-red-500\"\n                : holderName && !errors.holderName\n                  ? \"border-green-300 bg-green-50 focus:border-green-500\"\n                  : \"border-gray-200 focus:border-blue-500\"\n            } focus:outline-none focus:ring-2 focus:ring-blue-100`}\n            required\n          />\n          {errors.holderName && (\n            <div className=\"flex items-center gap-1 text-red-600 text-sm\">\n              <AlertCircle className=\"h-4 w-4\" />\n              {errors.holderName}\n            </div>\n          )}\n        </div>\n\n        <div className=\"space-y-2\">\n          <label className=\"text-sm font-semibold text-gray-700\">DNI del titular *</label>\n          <input\n            type=\"text\"\n            value={holderDni}\n            onChange={(e) => setHolderDni(e.target.value.replace(/\\D/g, \"\"))}\n            placeholder=\"12345678\"\n            maxLength={8}\n            className={`w-full p-4 border-2 rounded-xl text-lg font-mono transition-all duration-200 ${\n              errors.holderDni\n                ? \"border-red-300 bg-red-50 focus:border-red-500\"\n                : holderDni && !errors.holderDni\n                  ? \"border-green-300 bg-green-50 focus:border-green-500\"\n                  : \"border-gray-200 focus:border-blue-500\"\n            } focus:outline-none focus:ring-2 focus:ring-blue-100`}\n            required\n          />\n          {errors.holderDni && (\n            <div className=\"flex items-center gap-1 text-red-600 text-sm\">\n              <AlertCircle className=\"h-4 w-4\" />\n              {errors.holderDni}\n            </div>\n          )}\n        </div>\n      </div>\n\n      <div className=\"bg-gradient-to-r from-blue-50 to-green-50 p-6 rounded-xl border border-blue-200\">\n        <div className=\"flex items-center justify-center mb-4\">\n          <Image\n            src=\"https://cdn.atomsolucionesit.com.ar/media/dibuy/payway.svg\"\n            alt=\"Payway - Procesamiento seguro\"\n            width={140}\n            height={45}\n            className=\"h-10 w-auto\"\n          />\n        </div>\n        <div className=\"flex items-center justify-center gap-2 mb-3\">\n          <Shield className=\"h-5 w-5 text-blue-600\" />\n          <p className=\"text-sm font-semibold text-blue-800\">\n            Tus datos están protegidos con encriptación SSL\n          </p>\n        </div>\n        <div className=\"text-center\">\n          <a\n            href=\"https://cdn.atomsolucionesit.com.ar/media/dibuy/Declaración%20sobre%20el%20uso%20de%20medios%20de%20pago%20y%20procesamiento%20de%20transacciones.pdf\"\n            target=\"_blank\"\n            rel=\"noopener noreferrer\"\n            className=\"text-sm text-blue-700 hover:text-blue-900 underline font-medium transition-colors\"\n          >\n            Ver declaración de procesamiento de pagos\n          </a>\n        </div>\n      </div>\n    </div>\n  )\n}
+import { useState, useEffect } from "react"
+import { CreditCard, Shield, CheckCircle, AlertCircle } from "lucide-react"
+import Image from "next/image"
+import { getCardBrand } from "@/lib/cardUtils"
+
+interface PaymentFormProps {
+  onFormChange: (data: {
+    cardNumber: string
+    expiryDate: string
+    cvv: string
+    holderName: string
+    holderDni: string
+    isValid: boolean
+    detectedCard: string
+  }) => void
+}
+
+export function PaymentFormComponent({ onFormChange }: PaymentFormProps) {
+  const [cardNumber, setCardNumber] = useState("")
+  const [expiryDate, setExpiryDate] = useState("")
+  const [cvv, setCvv] = useState("")
+  const [holderName, setHolderName] = useState("")
+  const [holderDni, setHolderDni] = useState("")
+  const [detectedCard, setDetectedCard] = useState("")
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isFormValid, setIsFormValid] = useState(false)
+
+  const validateCardNumber = (number: string) => {
+    const cleaned = number.replace(/\s/g, "")
+    if (cleaned.length < 13 || cleaned.length > 19) return "Numero de tarjeta invalido"
+    if (!/^\d+$/.test(cleaned)) return "Solo se permiten numeros"
+    return ""
+  }
+
+  const validateExpiryDate = (date: string) => {
+    if (!/^\d{2}\/\d{2}$/.test(date)) return "Formato invalido (MM/AA)"
+    const [month, year] = date.split("/")
+    const currentYear = new Date().getFullYear() % 100
+    const currentMonth = new Date().getMonth() + 1
+
+    if (parseInt(month, 10) < 1 || parseInt(month, 10) > 12) return "Mes invalido"
+    if (
+      parseInt(year, 10) < currentYear ||
+      (parseInt(year, 10) === currentYear && parseInt(month, 10) < currentMonth)
+    ) {
+      return "Tarjeta vencida"
+    }
+
+    return ""
+  }
+
+  const validateCvv = (value: string) => {
+    if (value.length < 3 || value.length > 4) return "CVV debe tener 3 o 4 digitos"
+    if (!/^\d+$/.test(value)) return "Solo se permiten numeros"
+    return ""
+  }
+
+  const validateHolderName = (name: string) => {
+    if (name.length < 2) return "Nombre muy corto"
+    if (!/^[a-zA-ZA-Za-z\s]+$/.test(name)) return "Solo se permiten letras"
+    return ""
+  }
+
+  const validateDni = (dni: string) => {
+    if (dni.length < 7 || dni.length > 8) return "DNI debe tener 7 u 8 digitos"
+    if (!/^\d+$/.test(dni)) return "Solo se permiten numeros"
+    return ""
+  }
+
+  const formatCardNumber = (value: string) => {
+    const cleaned = value.replace(/\s/g, "")
+    return cleaned.replace(/(\d{4})(?=\d)/g, "$1 ")
+  }
+
+  const formatExpiryDate = (value: string) => {
+    const cleaned = value.replace(/\D/g, "")
+    if (cleaned.length >= 2) {
+      return `${cleaned.substring(0, 2)}/${cleaned.substring(2, 4)}`
+    }
+
+    return cleaned
+  }
+
+  useEffect(() => {
+    const newErrors: Record<string, string> = {}
+
+    if (cardNumber) newErrors.cardNumber = validateCardNumber(cardNumber)
+    if (expiryDate) newErrors.expiryDate = validateExpiryDate(expiryDate)
+    if (cvv) newErrors.cvv = validateCvv(cvv)
+    if (holderName) newErrors.holderName = validateHolderName(holderName)
+    if (holderDni) newErrors.holderDni = validateDni(holderDni)
+
+    setErrors(newErrors)
+
+    const hasErrors = Object.values(newErrors).some((error) => error !== "")
+    const allFieldsFilled = Boolean(cardNumber && expiryDate && cvv && holderName && holderDni)
+    const isValid = !hasErrors && allFieldsFilled
+
+    setIsFormValid(isValid)
+    onFormChange({
+      cardNumber: cardNumber.replace(/\s/g, ""),
+      expiryDate,
+      cvv,
+      holderName,
+      holderDni,
+      isValid,
+      detectedCard,
+    })
+  }, [cardNumber, expiryDate, cvv, holderName, holderDni, detectedCard, onFormChange])
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <CreditCard className="h-4 w-4" />
+            Numero de tarjeta *
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={formatCardNumber(cardNumber)}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\s/g, "")
+                setCardNumber(value)
+                setDetectedCard(value.length >= 6 ? getCardBrand(value) : "")
+              }}
+              placeholder="1234 5678 9012 3456"
+              maxLength={19}
+              className={`w-full rounded-xl border-2 p-4 font-mono text-lg transition-all duration-200 ${
+                errors.cardNumber
+                  ? "border-red-300 bg-red-50 focus:border-red-500"
+                  : cardNumber && !errors.cardNumber
+                    ? "border-green-300 bg-green-50 focus:border-green-500"
+                    : "border-gray-200 focus:border-blue-500"
+              } focus:outline-none focus:ring-2 focus:ring-blue-100`}
+              required
+            />
+            {detectedCard && (
+              <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span className="text-sm font-medium text-green-600">{detectedCard}</span>
+              </div>
+            )}
+          </div>
+          {errors.cardNumber && (
+            <div className="flex items-center gap-1 text-sm text-red-600">
+              <AlertCircle className="h-4 w-4" />
+              {errors.cardNumber}
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">Vencimiento *</label>
+            <input
+              type="text"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
+              placeholder="MM/AA"
+              maxLength={5}
+              className={`w-full rounded-xl border-2 p-4 font-mono text-lg transition-all duration-200 ${
+                errors.expiryDate
+                  ? "border-red-300 bg-red-50 focus:border-red-500"
+                  : expiryDate && !errors.expiryDate
+                    ? "border-green-300 bg-green-50 focus:border-green-500"
+                    : "border-gray-200 focus:border-blue-500"
+              } focus:outline-none focus:ring-2 focus:ring-blue-100`}
+              required
+            />
+            {errors.expiryDate && (
+              <div className="flex items-center gap-1 text-xs text-red-600">
+                <AlertCircle className="h-3 w-3" />
+                {errors.expiryDate}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-gray-700">CVV *</label>
+            <input
+              type="text"
+              value={cvv}
+              onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
+              placeholder="123"
+              maxLength={4}
+              className={`w-full rounded-xl border-2 p-4 font-mono text-lg transition-all duration-200 ${
+                errors.cvv
+                  ? "border-red-300 bg-red-50 focus:border-red-500"
+                  : cvv && !errors.cvv
+                    ? "border-green-300 bg-green-50 focus:border-green-500"
+                    : "border-gray-200 focus:border-blue-500"
+              } focus:outline-none focus:ring-2 focus:ring-blue-100`}
+              required
+            />
+            {errors.cvv && (
+              <div className="flex items-center gap-1 text-xs text-red-600">
+                <AlertCircle className="h-3 w-3" />
+                {errors.cvv}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-700">Nombre del titular *</label>
+          <input
+            type="text"
+            value={holderName}
+            onChange={(e) => setHolderName(e.target.value.toUpperCase())}
+            placeholder="JUAN PEREZ"
+            className={`w-full rounded-xl border-2 p-4 text-lg transition-all duration-200 ${
+              errors.holderName
+                ? "border-red-300 bg-red-50 focus:border-red-500"
+                : holderName && !errors.holderName
+                  ? "border-green-300 bg-green-50 focus:border-green-500"
+                  : "border-gray-200 focus:border-blue-500"
+            } focus:outline-none focus:ring-2 focus:ring-blue-100`}
+            required
+          />
+          {errors.holderName && (
+            <div className="flex items-center gap-1 text-sm text-red-600">
+              <AlertCircle className="h-4 w-4" />
+              {errors.holderName}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-gray-700">DNI del titular *</label>
+          <input
+            type="text"
+            value={holderDni}
+            onChange={(e) => setHolderDni(e.target.value.replace(/\D/g, ""))}
+            placeholder="12345678"
+            maxLength={8}
+            className={`w-full rounded-xl border-2 p-4 font-mono text-lg transition-all duration-200 ${
+              errors.holderDni
+                ? "border-red-300 bg-red-50 focus:border-red-500"
+                : holderDni && !errors.holderDni
+                  ? "border-green-300 bg-green-50 focus:border-green-500"
+                  : "border-gray-200 focus:border-blue-500"
+            } focus:outline-none focus:ring-2 focus:ring-blue-100`}
+            required
+          />
+          {errors.holderDni && (
+            <div className="flex items-center gap-1 text-sm text-red-600">
+              <AlertCircle className="h-4 w-4" />
+              {errors.holderDni}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-green-50 p-6">
+        <div className="mb-4 flex items-center justify-center">
+          <Image
+            src="https://cdn.atomsolucionesit.com.ar/media/dibuy/payway.svg"
+            alt="Payway - Procesamiento seguro"
+            width={140}
+            height={45}
+            className="h-10 w-auto"
+          />
+        </div>
+        <div className="mb-3 flex items-center justify-center gap-2">
+          <Shield className="h-5 w-5 text-blue-600" />
+          <p className="text-sm font-semibold text-blue-800">
+            Tus datos estan protegidos con encriptacion SSL
+          </p>
+        </div>
+        <div className="text-center">
+          <a
+            href="https://cdn.atomsolucionesit.com.ar/media/dibuy/Declaracion%20sobre%20el%20uso%20de%20medios%20de%20pago%20y%20procesamiento%20de%20transacciones.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-blue-700 underline transition-colors hover:text-blue-900"
+          >
+            Ver declaracion de procesamiento de pagos
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}

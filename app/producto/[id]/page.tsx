@@ -158,7 +158,7 @@ export default function ProductPage() {
     });
   };
 
-  const selectedVariant = useMemo(() => {
+  const selectedVariant = useMemo<ProductVariant | null>(() => {
     if (!hasVariantGroups) return null;
     if (Object.keys(selectedOptions).length !== variantGroups.length) return null;
 
@@ -176,8 +176,8 @@ export default function ProductPage() {
     );
   }, [hasVariantGroups, selectableVariants, selectedOptions, variantGroups]);
 
-  const selectedVariantImageUrl = useMemo(() => {
-    if (!hasVariantGroups) return null;
+  const selectedVariantImageUrls = useMemo(() => {
+    if (!hasVariantGroups) return [];
 
     const selectedWithImage = variantGroups
       .map((group) => ({
@@ -186,34 +186,34 @@ export default function ProductPage() {
           (option) => option.id === selectedOptions[group.id],
         ),
       }))
-      .filter((item) => item.option?.imageUrl);
+      .filter((item) => item.option?.imageUrl || item.option?.imageUrls?.length);
 
-    if (!selectedWithImage.length) return null;
+    if (!selectedWithImage.length) return [];
 
     const prioritized =
       selectedWithImage.find((item) =>
         item.group.name?.toLowerCase().includes("color"),
       ) || selectedWithImage[0];
 
-    return prioritized.option?.imageUrl || null;
+    return prioritized.option?.imageUrls?.filter(Boolean) || (prioritized.option?.imageUrl ? [prioritized.option.imageUrl] : []);
   }, [hasVariantGroups, selectedOptions, variantGroups]);
 
   const displayImages = useMemo(() => {
     const baseImages = product?.images || [];
-    if (!selectedVariantImageUrl) return baseImages;
+    if (!selectedVariantImageUrls.length) return baseImages;
 
-    return [
-      { id: `variant-${selectedVariantImageUrl}`, url: selectedVariantImageUrl },
-      ...baseImages.filter((image) => image?.url && image.url !== selectedVariantImageUrl),
-    ];
-  }, [product?.images, selectedVariantImageUrl]);
+    return selectedVariantImageUrls.map((imageUrl, index) => ({
+      id: `variant-${index}-${imageUrl}`,
+      url: imageUrl,
+    }));
+  }, [product?.images, selectedVariantImageUrls]);
 
   const currentImageUrl =
     displayImages[selectedImage]?.url || product?.images?.[0]?.url || null;
 
   useEffect(() => {
     setSelectedImage(0);
-  }, [product?.id, selectedVariantImageUrl]);
+  }, [product?.id, selectedVariantImageUrls]);
 
   const canAddToCart = !hasVariantGroups || Boolean(selectedVariant);
 
@@ -584,3 +584,4 @@ export default function ProductPage() {
     </div>
   );
 }
+

@@ -30,21 +30,24 @@ export const PaywayCardForm = ({ onSuccess, onError, amount }: PaywayCardFormPro
 
     try {
       // 1. Tokenizar tarjeta usando la API
-      const [month, year] = cardData.expiry.split('/');
+      const [rawMonth = "", rawYear = ""] = cardData.expiry.split('/');
+      const month = rawMonth.padStart(2, '0');
+      const year = rawYear.length === 2 ? '20' + rawYear : rawYear;
       
       console.log('Attempting to create token via API...');
       
       const tokenResult = await createCardToken({
         card_number: cardData.number.replace(/\s/g, ''),
-        card_expiration_month: month.padStart(2, '0'),
-        card_expiration_year: year.length === 2 ? '20' + year : year,
+        card_expiration_month: month,
+        card_expiration_year: year,
         security_code: cardData.cvv,
-        card_holder_name: cardData.name.toUpperCase()
+        card_holder_name: cardData.name.toUpperCase(),
+        card_holder_identification: { type: "dni", number: "0" },
       });
 
       console.log('Token result:', tokenResult);
 
-      if (!tokenResult.success) {
+      if (!tokenResult.success || !tokenResult.token) {
         throw new Error(tokenResult.error || 'Error al tokenizar la tarjeta');
       }
 

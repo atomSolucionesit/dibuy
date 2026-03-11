@@ -7,12 +7,15 @@ interface CardData {
   card_expiration_year: string;
   security_code: string;
   card_holder_name: string;
+  card_holder_identification: { type: string; number: string };
 }
 
 export const usePayway = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const createCardToken = async (cardData: CardData): Promise<{ success: boolean; token?: string; error?: any }> => {
+  const createCardToken = async (
+    cardData: CardData,
+  ): Promise<{ success: boolean; token?: string; error?: any }> => {
     setIsLoading(true);
 
     try {
@@ -28,6 +31,6 @@ export const usePayway = () => {
   return {
     isLoaded: true,
     isLoading,
-    createCardToken
+    createCardToken,
   };
 };

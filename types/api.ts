@@ -55,6 +55,7 @@ export interface ProductVariantGroupOption {
   displayLabel?: string | null;
   colorHex?: string | null;
   imageUrl?: string | null;
+  imageUrls?: string[] | null;
   groupId: string;
   name?: string;
 }

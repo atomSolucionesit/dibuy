@@ -92,7 +92,7 @@ function SearchPageContent() {
       case "rating":
         return b.rating - a.rating;
       case "newest":
-        return b.id - a.id;
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       default:
         return 0;
     }
@@ -339,7 +339,7 @@ function SearchPageContent() {
                       </button>
                       <Link href={`/producto/${product.id}`}>
                         <Image
-                          src={product.image || "/placeholder.svg"}
+                          src={product.images?.[0]?.url || "/placeholder.svg"}
                           alt={product.name}
                           width={400}
                           height={400}
