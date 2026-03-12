@@ -124,11 +124,11 @@ export default function CategoryPage() {
                           <span className="text-xl font-bold text-magenta">
                             {formatPrice(product.sellingPrice)}
                           </span>
-                          {product.originalPrice && (
+                          {/* {product.originalPrice && (
                             <span className="text-sm text-gray-500 line-through">
                               {formatPrice(product.originalPrice)}
                             </span>
-                          )}
+                          )} */}
                         </div>
 
                       </div>

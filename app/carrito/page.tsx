@@ -231,11 +231,11 @@ export default function CartPage() {
                           <span className="text-base sm:text-lg font-bold text-primary">
                             {formatPrice(item.sellingPrice)}
                           </span>
-                          {item.originalPrice && (
+                          {/* {item.originalPrice && (
                             <span className="text-xs sm:text-sm text-gray line-through">
                               {formatPrice(item.originalPrice)}
                             </span>
-                          )}
+                          )} */}
                         </div>
 
                         <div className="flex items-center justify-center sm:justify-end gap-2">
