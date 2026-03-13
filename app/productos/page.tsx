@@ -80,6 +80,37 @@ function ProductsPageContent() {
     }).format(price);
   };
 
+  const getVisiblePages = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, "ellipsis-end", totalPages];
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return [
+        1,
+        "ellipsis-start",
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ];
+    }
+
+    return [
+      1,
+      "ellipsis-start",
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+      "ellipsis-end",
+      totalPages,
+    ];
+  };
+
   const filteredProducts = products.filter((product) => {
     const inPriceRange =
       product.sellingPrice >= priceRange[0] &&
@@ -437,67 +468,81 @@ function ProductsPageContent() {
 
             {/* Pagination */}
             {!isLoading && totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-8">
-                <button
-                  onClick={() => {
-                    const newPage = currentPage - 1;
-                    setCurrentPage(newPage);
-                    fetchProducts(
-                      newPage,
-                      itemsPerPage,
-                      selectedCategory === "all" ? undefined : selectedCategory,
-                    );
-                    scrollToListTop();
-                  }}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-magenta hover:text-blanco transition-colors"
-                >
-                  Anterior
-                </button>
+              <div className="mt-8 flex items-center justify-center">
+                <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-blanco px-2 py-2 shadow-sm sm:gap-2 sm:px-3">
+                  <button
+                    onClick={() => {
+                      const newPage = currentPage - 1;
+                      setCurrentPage(newPage);
+                      fetchProducts(
+                        newPage,
+                        itemsPerPage,
+                        selectedCategory === "all" ? undefined : selectedCategory,
+                      );
+                      scrollToListTop();
+                    }}
+                    disabled={currentPage === 1}
+                    className="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-magenta hover:text-blanco transition-colors sm:px-4"
+                  >
+                    <span className="sm:hidden">Ant.</span>
+                    <span className="hidden sm:inline">Anterior</span>
+                  </button>
 
-                {[...Array(totalPages)].map((_, i) => {
-                  const page = i + 1;
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => {
-                        setCurrentPage(page);
-                        fetchProducts(
-                          page,
-                          itemsPerPage,
-                          selectedCategory === "all"
-                            ? undefined
-                            : selectedCategory,
-                        );
-                        scrollToListTop();
-                      }}
-                      className={`px-4 py-2 rounded-lg transition-colors ${
-                        currentPage === page
-                          ? "bg-magenta text-blanco"
-                          : "border border-gray-300 hover:bg-magenta hover:text-blanco"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
+                  {getVisiblePages().map((item, index) => {
+                    if (typeof item !== "number") {
+                      return (
+                        <span
+                          key={`${item}-${index}`}
+                          className="flex h-10 w-8 shrink-0 items-center justify-center text-sm text-gray-500"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
 
-                <button
-                  onClick={() => {
-                    const newPage = currentPage + 1;
-                    setCurrentPage(newPage);
-                    fetchProducts(
-                      newPage,
-                      itemsPerPage,
-                      selectedCategory === "all" ? undefined : selectedCategory,
+                    return (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          setCurrentPage(item);
+                          fetchProducts(
+                            item,
+                            itemsPerPage,
+                            selectedCategory === "all"
+                              ? undefined
+                              : selectedCategory,
+                          );
+                          scrollToListTop();
+                        }}
+                        className={`h-10 min-w-10 shrink-0 rounded-lg px-3 py-2 text-sm transition-colors sm:min-w-11 sm:px-4 ${
+                          currentPage === item
+                            ? "bg-magenta text-blanco"
+                            : "border border-gray-300 hover:bg-magenta hover:text-blanco"
+                        }`}
+                      >
+                        {item}
+                      </button>
                     );
-                    scrollToListTop();
-                  }}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-magenta hover:text-blanco transition-colors"
-                >
-                  Siguiente
-                </button>
+                  })}
+
+                  <button
+                    onClick={() => {
+                      const newPage = currentPage + 1;
+                      setCurrentPage(newPage);
+                      fetchProducts(
+                        newPage,
+                        itemsPerPage,
+                        selectedCategory === "all" ? undefined : selectedCategory,
+                      );
+                      scrollToListTop();
+                    }}
+                    disabled={currentPage === totalPages}
+                    className="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-magenta hover:text-blanco transition-colors sm:px-4"
+                  >
+                    <span className="sm:hidden">Sig.</span>
+                    <span className="hidden sm:inline">Siguiente</span>
+                  </button>
+                </div>
               </div>
             )}
 

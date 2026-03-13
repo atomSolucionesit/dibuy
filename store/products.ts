@@ -42,7 +42,9 @@ export const useProductsStore = create<ProductsState>((set) => ({
             isPromotion: true,
             published: true,
             stock: p.stockAvailable ?? 0,
-            images: p.promotionProduct?.[0]?.product?.images || [],
+            images: p.image
+              ? [{ url: p.image }]
+              : p.promotionProduct?.[0]?.product?.images || [],
             category: "Promoción",
             badge: "PROMO",
             description: p.description || "Combo de productos en oferta",
