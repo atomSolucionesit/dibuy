@@ -260,6 +260,7 @@ export default function CheckoutPage() {
             selectedColor: item.selectedColor || null,
             productVariantId: item.selectedVariantCombinationId || null,
             productVariantName: item.selectedVariantName || null,
+            comboSelections: (item as any).comboSelections || null,
           })),
           preferredPaymentMethod: formData.paymentMethod,
         };
@@ -349,6 +350,7 @@ export default function CheckoutPage() {
         selectedColor: item.selectedColor || null,
         productVariantId: item.selectedVariantCombinationId || null,
         productVariantName: item.selectedVariantName || null,
+        comboSelections: (item as any).comboSelections || null,
       }));
 
       const sale = await createSale(salePayload);

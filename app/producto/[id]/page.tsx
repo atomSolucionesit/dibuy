@@ -17,7 +17,13 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { ProductService } from "@/services/productService";
-import { Product, Brand, ProductVariant, ProductVariantGroup } from "@/types/api";
+import {
+  Product,
+  Brand,
+  ProductVariant,
+  ProductVariantGroup,
+} from "@/types/api";
+import ComboSelector from "@/components/ComboSelector";
 
 export default function ProductPage() {
   const params = useParams();
@@ -25,7 +31,9 @@ export default function ProductPage() {
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, string>
+  >({});
   const [product, setProducto] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -33,6 +41,7 @@ export default function ProductPage() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [isZoomed, setIsZoomed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showComboSelector, setShowComboSelector] = useState(false);
 
   const fetchProduct = async () => {
     try {
@@ -73,7 +82,7 @@ export default function ProductPage() {
         const response = await ProductService.getProductsByCategory(
           categoryId,
           1,
-          8
+          8,
         );
         const data = response?.data || [];
         const filtered = data.filter((p: Product) => p.id !== product.id);
@@ -121,13 +130,12 @@ export default function ProductPage() {
   }, [product?.variants]);
 
   const hasVariantGroups = Boolean(
-    product?.hasVariants && variantGroups.length > 0 && selectableVariants.length > 0,
+    product?.hasVariants &&
+    variantGroups.length > 0 &&
+    selectableVariants.length > 0,
   );
 
-  const isOptionEnabled = (
-    groupId: string,
-    optionId: string,
-  ): boolean => {
+  const isOptionEnabled = (groupId: string, optionId: string): boolean => {
     if (!hasVariantGroups) return true;
     return selectableVariants.some((variant) => {
       const links = variant.optionLinks || [];
@@ -136,14 +144,16 @@ export default function ProductPage() {
       );
       if (!hasOption) return false;
 
-      return Object.entries(selectedOptions).every(([selectedGroupId, selectedOptionId]) => {
-        if (selectedGroupId === groupId) return true;
-        return links.some(
-          (link) =>
-            link.groupId === selectedGroupId &&
-            link.optionId === selectedOptionId,
-        );
-      });
+      return Object.entries(selectedOptions).every(
+        ([selectedGroupId, selectedOptionId]) => {
+          if (selectedGroupId === groupId) return true;
+          return links.some(
+            (link) =>
+              link.groupId === selectedGroupId &&
+              link.optionId === selectedOptionId,
+          );
+        },
+      );
     });
   };
 
@@ -160,7 +170,8 @@ export default function ProductPage() {
 
   const selectedVariant = useMemo(() => {
     if (!hasVariantGroups) return null;
-    if (Object.keys(selectedOptions).length !== variantGroups.length) return null;
+    if (Object.keys(selectedOptions).length !== variantGroups.length)
+      return null;
 
     return (
       selectableVariants.find((variant) => {
@@ -180,6 +191,12 @@ export default function ProductPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
+
+    if (product.isCombo) {
+      setShowComboSelector(true);
+      return;
+    }
+
     if (hasVariantGroups && !selectedVariant) return;
 
     const selectedVariantLabels =
@@ -202,6 +219,20 @@ export default function ProductPage() {
     for (let i = 0; i < quantity; i++) {
       addItem(productWithSelection as Product);
     }
+  };
+
+  const handleComboConfirm = (selections: any[]) => {
+    if (!product) return;
+
+    const productWithCombo = {
+      ...product,
+      comboSelections: selections,
+      selectedVariantCombinationId: null,
+      selectedVariantName: "Combo Selection",
+    };
+
+    addItem(productWithCombo as Product);
+    setShowComboSelector(false);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -335,16 +366,12 @@ export default function ProductPage() {
                 <span className="text-3xl font-bold text-primary">
                   {formatPrice(product.sellingPrice)}
                 </span>
-                {product.originalPrice && (
-                  <span className="text-lg text-gray line-through">
-                    {formatPrice(product.originalPrice)}
-                  </span>
-                )}
               </div>
               <div className="flex items-center space-x-4 text-xs text-gray">
-                {product.haveIvaInPrice ? "Precio c/IVA incluído" : "Precio s/IVA incluído"}
+                {product.haveIvaInPrice
+                  ? "Precio c/IVA incluído"
+                  : "Precio s/IVA incluído"}
               </div>
-
             </div>
 
             <p className="text-gray-700">{product.description}</p>
@@ -355,10 +382,13 @@ export default function ProductPage() {
                 <span className="font-medium">Variantes:</span>
                 {variantGroups.map((group) => (
                   <div key={group.id} className="space-y-2">
-                    <div className="text-sm font-semibold text-gray-700">{group.name}</div>
+                    <div className="text-sm font-semibold text-gray-700">
+                      {group.name}
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {group.options.map((option) => {
-                        const selected = selectedOptions[group.id] === option.id;
+                        const selected =
+                          selectedOptions[group.id] === option.id;
                         const enabled = isOptionEnabled(group.id, option.id);
                         return (
                           <button
@@ -401,7 +431,8 @@ export default function ProductPage() {
                 ))}
                 {!selectedVariant && (
                   <p className="text-xs text-gray-500">
-                    Selecciona una opción en cada grupo para poder agregar al carrito.
+                    Selecciona una opción en cada grupo para poder agregar al
+                    carrito.
                   </p>
                 )}
                 {selectedVariant && (
@@ -542,6 +573,13 @@ export default function ProductPage() {
       </div>
 
       <Footer />
+      {showComboSelector && product && (
+        <ComboSelector
+          product={product}
+          onConfirm={handleComboConfirm}
+          onCancel={() => setShowComboSelector(false)}
+        />
+      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import { ProductService } from "@/services/productService";
 import { Product } from "@/types/api";
 import { useCart } from "@/contexts/CartContext";
+import ComboSelector from "@/components/ComboSelector";
 
 export default function CategoryPage() {
   const params = useParams();
@@ -18,6 +19,8 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(true);
   const [categoryName, setCategoryName] = useState("");
   const { addItem } = useCart();
+  const [showComboSelector, setShowComboSelector] = useState(false);
+  const [comboProduct, setComboProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const loadCategoryProducts = async () => {
@@ -130,11 +133,27 @@ export default function CategoryPage() {
                             </span>
                           )}
                         </div>
-
+                        {product.hasVariants && (
+                          <div className="text-[10px] md:text-xs text-gray-500 bg-gray-100 px-1 md:px-2 py-0.5 md:py-1 rounded inline-block">
+                            Opciones disponibles
+                          </div>
+                        )}
+                        {product.isCombo && (
+                          <div className="text-[10px] md:text-xs text-magenta font-semibold bg-magenta/10 px-1 md:px-2 py-0.5 md:py-1 rounded inline-block ml-1">
+                            Combo: {product.comboQuantity} u.
+                          </div>
+                        )}
                       </div>
 
                       <button
-                        onClick={() => addItem(product)}
+                        onClick={() => {
+                          if (product.isCombo) {
+                            setComboProduct(product);
+                            setShowComboSelector(true);
+                          } else {
+                            addItem(product);
+                          }
+                        }}
                         className="group relative overflow-hidden w-full bg-gradient-primary text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center space-x-2"
                       >
                         <span className="relative z-10 flex items-center rounded-md md:rounded-none md:space-x-2">
@@ -176,6 +195,26 @@ export default function CategoryPage() {
       </section>
 
       <Footer />
+      {showComboSelector && comboProduct && (
+        <ComboSelector
+          product={comboProduct}
+          onConfirm={(selections) => {
+            const productWithCombo = {
+              ...comboProduct,
+              comboSelections: selections,
+              selectedVariantCombinationId: null,
+              selectedVariantName: "Combo Selection",
+            };
+            addItem(productWithCombo as Product);
+            setShowComboSelector(false);
+            setComboProduct(null);
+          }}
+          onCancel={() => {
+            setShowComboSelector(false);
+            setComboProduct(null);
+          }}
+        />
+      )}
     </div>
   );
 }

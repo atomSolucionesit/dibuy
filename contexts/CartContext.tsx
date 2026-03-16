@@ -11,6 +11,7 @@ export interface CartItem extends Product {
   selectedVariantCombinationId?: string | null;
   selectedVariantName?: string | null;
   selectedVariantOptions?: Record<string, string> | null;
+  comboSelections?: any;
   cartItemKey: string;
 }
 
@@ -75,6 +76,10 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
               selectedVariantOptions:
                 (product as any).selectedVariantOptions ??
                 item.selectedVariantOptions ??
+                null,
+              comboSelections:
+                (product as any).comboSelections ??
+                item.comboSelections ??
                 null,
             };
           }

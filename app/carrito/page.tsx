@@ -87,7 +87,9 @@ export default function CartPage() {
         setQuotes(opciones);
         if (opciones.length > 0) {
           const firstQuote = opciones[0];
-          const selectedCarrierObj = carriers.find(c => c.name.toLowerCase().replace(/\s/g, "") === empresa);
+          const selectedCarrierObj = carriers.find(
+            (c) => c.name.toLowerCase().replace(/\s/g, "") === empresa,
+          );
           setShipping({ ...firstQuote, carrierId: selectedCarrierObj?.id });
         }
       })
@@ -107,7 +109,9 @@ export default function CartPage() {
   const handleShippingQuoteChange = (quoteName: string) => {
     const quote = quotes.find((q) => q.name === quoteName);
     if (quote) {
-      const selectedCarrierObj = carriers.find(c => c.name.toLowerCase().replace(/\s/g, "") === empresa);
+      const selectedCarrierObj = carriers.find(
+        (c) => c.name.toLowerCase().replace(/\s/g, "") === empresa,
+      );
       setShipping({ ...quote, carrierId: selectedCarrierObj?.id });
     }
   };
@@ -118,7 +122,8 @@ export default function CartPage() {
       if (data && Array.isArray(data)) {
         setCarriers(data);
         if (data.length > 0) {
-          const defaultCarrier = data.find((c: any) => (c as any).isDefault) || data[0];
+          const defaultCarrier =
+            data.find((c: any) => (c as any).isDefault) || data[0];
           setEmpresa(defaultCarrier.name.toLowerCase().replace(/\s/g, ""));
         }
       }
@@ -231,18 +236,16 @@ export default function CartPage() {
                           <span className="text-base sm:text-lg font-bold text-primary">
                             {formatPrice(item.sellingPrice)}
                           </span>
-                          {item.originalPrice && (
-                            <span className="text-xs sm:text-sm text-gray line-through">
-                              {formatPrice(item.originalPrice)}
-                            </span>
-                          )}
                         </div>
 
                         <div className="flex items-center justify-center sm:justify-end gap-2">
                           <div className="flex items-center border border-gray-300 rounded-lg">
                             <button
                               onClick={() =>
-                                updateQuantity(item.cartItemKey, item.quantity - 1)
+                                updateQuantity(
+                                  item.cartItemKey,
+                                  item.quantity - 1,
+                                )
                               }
                               className="p-1 hover:bg-gray-100"
                             >
@@ -253,7 +256,10 @@ export default function CartPage() {
                             </span>
                             <button
                               onClick={() =>
-                                updateQuantity(item.cartItemKey, item.quantity + 1)
+                                updateQuantity(
+                                  item.cartItemKey,
+                                  item.quantity + 1,
+                                )
                               }
                               className="p-1 hover:bg-gray-100"
                             >
@@ -402,12 +408,19 @@ export default function CartPage() {
                               >
                                 {carriers.length > 0 ? (
                                   carriers.map((c) => (
-                                    <option key={c.id} value={c.name.toLowerCase().replace(/\s/g, "")}>
+                                    <option
+                                      key={c.id}
+                                      value={c.name
+                                        .toLowerCase()
+                                        .replace(/\s/g, "")}
+                                    >
                                       {c.name}
                                     </option>
                                   ))
                                 ) : (
-                                  <option value="">No hay transportistas disponibles</option>
+                                  <option value="">
+                                    No hay transportistas disponibles
+                                  </option>
                                 )}
                               </select>
                             </div>
@@ -466,9 +479,9 @@ export default function CartPage() {
                     <span className="text-primary">
                       {formatPrice(
                         state.total +
-                        (deliveryMethod === "pickup"
-                          ? 0
-                          : state.shipping?.price || 0),
+                          (deliveryMethod === "pickup"
+                            ? 0
+                            : state.shipping?.price || 0),
                       )}
                     </span>
                   </div>

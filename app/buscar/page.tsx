@@ -19,6 +19,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { searchProducts, products } from "@/data/products";
+import ComboSelector from "@/components/ComboSelector";
+import { Product } from "@/types/api";
 
 const sortOptions = [
   { id: "featured", name: "Destacados" },
@@ -48,6 +50,8 @@ function SearchPageContent() {
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [selectedPriceRange, setSelectedPriceRange] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [showComboSelector, setShowComboSelector] = useState(false);
+  const [comboProduct, setComboProduct] = useState<Product | null>(null);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-AR", {
@@ -62,21 +66,21 @@ function SearchPageContent() {
     const matchesSearch =
       searchQuery === "" ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchQuery.toLowerCase());
+      (product.brand && product.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (product.CategoryProduct && product.CategoryProduct.some(cp => cp.category?.name.toLowerCase().includes(searchQuery.toLowerCase())));
 
     const matchesBrand =
       selectedBrand === "all" || product.brand === selectedBrand;
     const matchesCategory =
-      selectedCategory === "all" || product.category === selectedCategory;
+      selectedCategory === "all" || (product.CategoryProduct && product.CategoryProduct.some(cp => cp.category?.name.toLowerCase() === selectedCategory.toLowerCase()));
 
     let matchesPrice = true;
     if (selectedPriceRange !== "all") {
       const [min, max] = selectedPriceRange.split("-").map(Number);
       if (selectedPriceRange === "1000000+") {
-        matchesPrice = product.price >= 1000000;
+        matchesPrice = product.sellingPrice >= 1000000;
       } else {
-        matchesPrice = product.price >= min && product.price <= max;
+        matchesPrice = product.sellingPrice >= min && product.sellingPrice <= max;
       }
     }
 
@@ -86,13 +90,13 @@ function SearchPageContent() {
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case "price-low":
-        return a.price - b.price;
+        return a.sellingPrice - b.sellingPrice;
       case "price-high":
-        return b.price - a.price;
+        return b.sellingPrice - a.sellingPrice;
       case "rating":
-        return b.rating - a.rating;
+        return 0; // rating not available in API Product
       case "newest":
-        return b.id - a.id;
+        return b.id.localeCompare(a.id);
       default:
         return 0;
     }
@@ -339,7 +343,7 @@ function SearchPageContent() {
                       </button>
                       <Link href={`/producto/${product.id}`}>
                         <Image
-                          src={product.image || "/placeholder.svg"}
+                          src={product.images?.[0]?.url || "/placeholder.svg"}
                           alt={product.name}
                           width={400}
                           height={400}
@@ -384,7 +388,7 @@ function SearchPageContent() {
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
                           <span className="text-xl font-bold text-primary">
-                            {formatPrice(product.price)}
+                            {formatPrice(product.sellingPrice)}
                           </span>
                           {product.originalPrice && (
                             <span className="text-sm text-gray line-through">
@@ -392,10 +396,27 @@ function SearchPageContent() {
                             </span>
                           )}
                         </div>
+                        {product.hasVariants && (
+                          <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded inline-block">
+                            {product.variantGroups?.length || 0} opciones disponibles
+                          </div>
+                        )}
+                        {product.isCombo && (
+                          <div className="text-xs text-magenta-600 bg-magenta/10 px-2 py-1 rounded inline-block">
+                            Combo: {product.comboQuantity} unidades
+                          </div>
+                        )}
 
                       </div>
-                      <button
-                        onClick={() => addItem(product)}
+                        <button
+                          onClick={() => {
+                            if ((product as any).isCombo) {
+                              setComboProduct(product as any);
+                              setShowComboSelector(true);
+                            } else {
+                              addItem(product as any);
+                            }
+                          }}
                         className="group relative overflow-hidden w-full bg-gradient-primary text-white px-4 py-3 rounded-lg font-medium hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center space-x-2 mt-4"
                       >
                         <span className="relative z-10 flex items-center space-x-2">
@@ -413,6 +434,26 @@ function SearchPageContent() {
         </div>
       </div>
       <Footer />
+      {showComboSelector && comboProduct && (
+        <ComboSelector
+          product={comboProduct}
+          onConfirm={(selections) => {
+            const productWithCombo = {
+              ...comboProduct,
+              comboSelections: selections,
+              selectedVariantCombinationId: null,
+              selectedVariantName: "Combo Selection",
+            };
+            addItem(productWithCombo as Product);
+            setShowComboSelector(false);
+            setComboProduct(null);
+          }}
+          onCancel={() => {
+            setShowComboSelector(false);
+            setComboProduct(null);
+          }}
+        />
+      )}
     </div>
   );
 }

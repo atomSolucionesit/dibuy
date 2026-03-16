@@ -47,6 +47,8 @@ export interface Product {
   variants?: ProductVariant[];
   isPromotion?: boolean;
   dbPromotionId?: number;
+  isCombo?: boolean;
+  comboQuantity?: number;
 }
 
 export interface ProductVariantGroupOption {
