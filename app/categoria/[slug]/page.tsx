@@ -31,7 +31,7 @@ export default function CategoryPage() {
         setProducts(productsResponse.data || []);
 
         // Buscar el nombre real de la categoría
-        const category = categoriesResponse?.find(cat => cat.id === slug);
+        const category = categoriesResponse?.find((cat: any) => cat.id === slug);
         setCategoryName(category?.name || decodeURIComponent(slug).replace(/-/g, " ").toUpperCase());
       } catch (error) {
         console.error("Error loading category products:", error);
