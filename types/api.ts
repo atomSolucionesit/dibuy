@@ -47,6 +47,14 @@ export interface Product {
   variants?: ProductVariant[];
   isPromotion?: boolean;
   dbPromotionId?: number;
+  promotionProduct?: Array<{
+    id: number;
+    quantity: number;
+    productId: string;
+    productVariantId?: string | null;
+    product?: Product;
+    productVariant?: ProductVariant;
+  }>;
 }
 
 export interface ProductVariantGroupOption {

@@ -17,6 +17,7 @@ export default function Header() {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasPromotions, setHasPromotions] = useState(false);
   const marqueeTrackRef = useRef<HTMLDivElement | null>(null);
   const marqueeGroupRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
@@ -29,6 +30,20 @@ export default function Header() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  useEffect(() => {
+    const loadPromotions = async () => {
+      try {
+        const promotions = await ProductService.getPromotions();
+        setHasPromotions(Array.isArray(promotions) && promotions.length > 0);
+      } catch (error) {
+        console.error("Error loading promotions:", error);
+        setHasPromotions(false);
+      }
+    };
+
+    loadPromotions();
+  }, []);
 
   const getBannerColors = () => {
     if (currentGradient.includes("magenta")) {
@@ -325,6 +340,11 @@ export default function Header() {
             <div className="flex items-center py-3 gap-4">
               <div className="flex-1 overflow-hidden">
                 <div className="categories-nav-container overflow-x-auto categories-scroll">
+                  {hasPromotions && (
+                    <Link href="/promociones" className="category-link-full text-magenta font-semibold">
+                      PROMOS!!!
+                    </Link>
+                  )}
                   {categories?.map((category) => (
                     <Link
                       key={category.id}
@@ -350,6 +370,14 @@ export default function Header() {
           <nav className="md:hidden border-t border-gray-100 mb-4">
             <div className="overflow-x-auto categories-scroll">
               <div className="flex items-center gap-3 py-2 min-w-max">
+                {hasPromotions && (
+                  <Link
+                    href="/promociones"
+                    className="text-xs font-semibold text-magenta hover:text-magenta-dark transition-colors whitespace-nowrap px-3 py-2 rounded-md hover:bg-gray-50 flex-shrink-0"
+                  >
+                    PROMOS!!!
+                  </Link>
+                )}
                 {categories?.map((category) => (
                   <Link
                     key={category.id}

@@ -67,6 +67,31 @@ const ensureEcommerceCompanyId = async (): Promise<string> => {
   return String(companyId);
 };
 
+const mapPromotionToProduct = (promotion: any): Product => ({
+  ...promotion,
+  id: `promo-${promotion.id}`,
+  dbPromotionId: promotion.id,
+  sellingPrice: Number(promotion.total || 0),
+  originalPrice: undefined,
+  name: promotion.name,
+  sku: `PROMO-${promotion.id}`,
+  isPromotion: true,
+  published: true,
+  stock: Number(promotion.stockAvailable ?? promotion.availableStock ?? 0),
+  images: promotion.image
+    ? [{
+        id: `promotion-image-${promotion.id}`,
+        url: promotion.image,
+        productId: `promo-${promotion.id}`,
+        createdAt: new Date().toISOString(),
+      }]
+    : promotion.promotionProduct?.[0]?.product?.images || [],
+  category: "Promoci?n",
+  badge: "PROMO",
+  description: promotion.description || "Combo de productos en oferta",
+  CategoryProduct: [],
+});
+
 export const ProductService = {
   // Filtrar productos publicados
   filterPublishedProducts(products: Product[]) {
@@ -183,11 +208,17 @@ export const ProductService = {
     return response.data.data || response.data || [];
   },
 
+  async getPromotionCatalog() {
+    const promotions = await this.getPromotions();
+    return (Array.isArray(promotions) ? promotions : []).map(mapPromotionToProduct);
+  },
+
   async getPromotionById(id: string) {
     const companyId = await ensureEcommerceCompanyId();
     const response = await api.get(
       `/promotions/ecommerce/${companyId}/promotion/${id}`,
     );
-    return response.data.data || response.data;
+    const promotion = response.data.data || response.data;
+    return mapPromotionToProduct(promotion);
   },
 };
