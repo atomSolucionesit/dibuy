@@ -1,5 +1,5 @@
 import { api } from "@/api/index";
-import { Product, Category } from "@/types/api";
+import { Product } from "@/types/api";
 
 const ECOMMERCE_TOKEN_KEY = "ecommerce_token";
 const ECOMMERCE_TOKEN_EXP_KEY = "ecommerce_token_expiry";
@@ -163,43 +163,10 @@ export const ProductService = {
   },
 
   async getPublishedCategories() {
-    const companyId = await ensureEcommerceCompanyId();
+    await ensureEcommerceCompanyId();
 
-    const size = 50;
-    let page = 1;
-    const maxPages = 20;
-    const categoriesMap = new Map<string, Category>();
-
-    while (page <= maxPages) {
-      const response = await api.get(
-        `/products/ecommerce/${companyId}?page=${page}&size=${size}`,
-      );
-      const info = response.data.info || response.data;
-      const products: Product[] = info.data || [];
-
-      products.forEach((product) => {
-        if (product.CategoryProduct && Array.isArray(product.CategoryProduct)) {
-          product.CategoryProduct.forEach((cp: any) => {
-            if (cp?.category?.id) {
-              categoriesMap.set(cp.category.id, cp.category);
-            }
-          });
-        }
-      });
-
-      const meta = info.meta;
-      if (!meta || page >= meta.pages) {
-        break;
-      }
-
-      page += 1;
-    }
-
-    if (page > maxPages) {
-      console.warn("getPublishedCategories: se alcanzÃ³ maxPages");
-    }
-
-    return Array.from(categoriesMap.values());
+    const response = await api.get("/category/all?size=0");
+    return response.data.info?.data || response.data;
   },
 
   async getPromotions() {
